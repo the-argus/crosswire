@@ -1,14 +1,14 @@
 #include "render_pipeline.hpp"
 #include "constants/screen.hpp"
-#include "gamestate.hpp"
 #include "testing/abort.hpp"
+#include <raylib.h>
 
 // window scaling and splitscreen
 static ::RenderTexture main_target;
 
 static void window_draw(float screen_scale);
 
-namespace escort::render_pipeline {
+namespace cw::render_pipeline {
 void render(void (*game_draw)(), void (*hud_draw)())
 {
     Camera2D *cam = nullptr;
@@ -52,7 +52,7 @@ void init()
     main_target = LoadRenderTexture(GAME_WIDTH, GAME_HEIGHT);
     SetTextureFilter(main_target.texture, TEXTURE_FILTER_POINT);
 }
-} // namespace escort::render_pipeline
+} // namespace cw::render_pipeline
 
 /// Resize the game's main render texture and draw it to the window.
 static void window_draw(float screen_scale)

@@ -1,6 +1,6 @@
 const std = @import("std");
 const builtin = @import("builtin");
-const app_name = "escort";
+const app_name = "crosswire";
 
 const release_flags = &[_][]const u8{
     "-DNDEBUG",
@@ -56,18 +56,14 @@ const zcc = @import("compile_commands");
 const build_emscripten = @import("build_emscripten.zig");
 
 const cpp_sources = &[_][]const u8{
-    "src/level_generation.cpp",
     "src/thelib/body.cpp",
     "src/thelib/shape.cpp",
     "src/thelib/space.cpp",
     "src/thelib/vect.cpp",
-    "src/hotreload/dlutils.cpp", // NOTE: not necessary in release mode
     "src/natural_log/natural_log.cpp",
     "src/allo/c_allocator.cpp",
     "src/allo/random_allocation_registry.cpp",
     "src/allo/stack_allocator.cpp",
-    "src/gamestate.cpp",
-    "src/inputstate.cpp",
     "src/render_pipeline.cpp",
     "src/main.cpp",
 };
@@ -84,9 +80,6 @@ const test_source_files = &[_][]const u8{
     "opt_t/opt_t.cpp",
     "stack_allocator_t/stack_allocator_t.cpp",
     "slice_t/slice_t.cpp",
-    "one_of_t/one_of_t.cpp",
-    "pool_allocator_t/pool_allocator_t.cpp",
-    "pool_allocator_iterable_t/pool_allocator_iterable_t.cpp",
     "pool_allocator_generational_t/pool_allocator_generational_t.cpp",
 };
 
