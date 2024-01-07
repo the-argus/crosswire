@@ -12,8 +12,8 @@
             .hash = "122014221f044a21045103dec0254a60c8edd3c3e3cef3fed359ca072ce0cf05252a",
         },
         .chipmunk2d = .{
-            .url = "https://github.com/the-argus/Chipmunk2D/archive/36c3ed78cd6981884201700d92a72466c4753c04.tar.gz",
-            .hash = "1220a55fd92b706c38163738b9845a0584547378786ca8fb4158c7030bf25167ee61",
+            .url = "https://github.com/the-argus/Chipmunk2D/archive/7acd99992e3b5923005adb5dc8ef0e8cf644a92a.tar.gz",
+            .hash = "122067d624e29586e1826294138f7c4a7de84793b0e6d6f3b90100169cbfbfff8bb3",
         },
         .compile_commands = .{
             .url = "https://github.com/the-argus/zig-compile-commands/archive/1310c5d03a21f2e55d5272021a4b7c7ee656f613.tar.gz",
