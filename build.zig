@@ -66,6 +66,8 @@ const cpp_sources = &[_][]const u8{
     "src/allo/stack_allocator.cpp",
     "src/render_pipeline.cpp",
     "src/main.cpp",
+    "src/globals.cpp",
+    "src/input.cpp",
 };
 
 const include_dirs = &[_][]const u8{

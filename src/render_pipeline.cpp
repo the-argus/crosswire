@@ -1,6 +1,7 @@
 #include "render_pipeline.hpp"
 #include "constants/screen.hpp"
-#include "testing/abort.hpp"
+#include "globals.hpp"
+#include "thelib/rect.hpp"
 #include <raylib.h>
 
 // window scaling and splitscreen
@@ -9,45 +10,29 @@ static ::RenderTexture main_target;
 static void window_draw(float screen_scale);
 
 namespace cw::render_pipeline {
-void render(void (*game_draw)(), void (*hud_draw)())
+void render(void (*game_draw)(), void (*hud_draw)()) noexcept
 {
-    Camera2D *cam = nullptr;
-    if (auto maybe_cam = Gamestate::main_camera()) [[likely]] {
-        auto res = maybe_cam.value().get();
-        if (!res.okay()) [[unlikely]] {
-            LN_FATAL("Globally registered camera has been destroyed, unabled "
-                     "to render scene");
-            ABORT();
-        }
-        cam = &res.release();
-    } else {
-        LN_FATAL("No global camera registered, unable to start rendering "
-                 "scene. Was a camera controller initialized?");
-        ABORT();
-    }
+    Camera3D *cam = &get_main_camera();
     BeginTextureMode(main_target);
     // clang-format off
 		ClearBackground(RAYWHITE);
-        BeginMode2D(*cam);
+        BeginMode3D(*cam);
             // draw in-game objects
             game_draw();
 
-        EndMode2D();
+        EndMode3D();
+        // draw hud directly on the screen without camera transforms
         hud_draw();
     // clang-format on
     EndTextureMode();
 
     // draw the game to the window at the correct size
     BeginDrawing();
-    window_draw(Gamestate::screen_scale());
+    window_draw(get_screen_scale());
     EndDrawing();
 }
 
-///
-/// Initialize and configure render pipeline by setting values in the
-/// RenderTexture
-///
-void init()
+void init() noexcept
 {
     main_target = LoadRenderTexture(GAME_WIDTH, GAME_HEIGHT);
     SetTextureFilter(main_target.texture, TEXTURE_FILTER_POINT);
