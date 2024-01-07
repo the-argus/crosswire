@@ -1,0 +1,23 @@
+.{
+    .name = "escort_cpp",
+    .version = "0.0.1",
+
+    .dependencies = .{
+        .raylib = .{
+            .url = "https://github.com/raysan5/raylib/archive/e7664d5684f4b7c487d2a08645f23a1d0485f9e7.tar.gz",
+            .hash = "12203a237a96a5f37713979a57a201b4ec93f8a56e571f8584cfeb72156e4ccc14fa",
+        },
+        .fmt = .{
+            .url = "https://github.com/the-argus/fmt/archive/6943e150b4c9fe5b033203dabbc60668e6122a2c.tar.gz",
+            .hash = "122014221f044a21045103dec0254a60c8edd3c3e3cef3fed359ca072ce0cf05252a",
+        },
+        .chipmunk2d = .{
+            .url = "https://github.com/the-argus/Chipmunk2D/archive/36c3ed78cd6981884201700d92a72466c4753c04.tar.gz",
+            .hash = "1220a55fd92b706c38163738b9845a0584547378786ca8fb4158c7030bf25167ee61",
+        },
+        .compile_commands = .{
+            .url = "https://github.com/the-argus/zig-compile-commands/archive/1310c5d03a21f2e55d5272021a4b7c7ee656f613.tar.gz",
+            .hash = "122016568d000bacabc11c876dbee168ca6c736a6d1925ee612a63b150cb22518a18",
+        },
+    }
+}
