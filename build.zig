@@ -106,15 +106,10 @@ pub fn build(b: *std.Build) !void {
     const mode = b.standardOptimizeOption(.{});
 
     const testing = b.option(bool, "testing", "Build the program with testing enabled. Corresponds mostly to exceptions being enabled.") orelse true;
-    const hot_reload = b.option(bool, "hot_reload", "Enable recompilation and reloading when code is modified.") orelse false;
-    if (hot_reload and mode != .Debug) {
-        @panic("hot_reload should not be enabled for a release build.");
-    }
 
     var flags = std.ArrayList([]const u8).init(b.allocator);
     defer flags.deinit();
     try flags.appendSlice(if (mode == .Debug) debug_flags else release_flags);
-    if (hot_reload) try flags.appendSlice(&.{"-DHOT_RELOAD"});
 
     try flags.appendSlice(if (testing) testing_flags else non_testing_flags);
 
@@ -171,29 +166,6 @@ pub fn build(b: *std.Build) !void {
     });
     linkLibrariesFor(tests_lib);
 
-    // get all component files (these will be used for hot reloading)
-    var components = std.ArrayList([]const u8).init(b.allocator);
-    const path_to_components = "src/components";
-    defer components.deinit();
-    {
-        var components_dir = try std.fs.cwd().openIterableDir(path_to_components, .{});
-        defer components_dir.close();
-        var walker = try components_dir.walk(b.allocator);
-        defer walker.deinit();
-        while (try walker.next()) |file| {
-            if (std.mem.eql(u8, std.fs.path.extension(file.path), ".cpp")) {
-                const component = b.pathJoin(&.{ path_to_components, file.path });
-                components.append(component) catch @panic("OOM");
-            }
-        }
-    }
-
-    // this is used if we aren't in hot reload
-    var sources_plus_components = std.ArrayList([]const u8).init(b.allocator);
-    defer sources_plus_components.deinit();
-    sources_plus_components.appendSlice(cpp_sources) catch @panic("OOM");
-    sources_plus_components.appendSlice(components.toOwnedSlice() catch @panic("OOM")) catch @panic("OOM");
-
     switch (target.getOsTag()) {
         .wasi, .emscripten => {
             // emcc will provide the libc in the case of emscripten
@@ -207,7 +179,7 @@ pub fn build(b: *std.Build) !void {
                 .app_name = app_name,
                 .optimize = mode,
                 .target = target,
-                .cpp_sources = sources_plus_components.toOwnedSlice() catch @panic("OOM"),
+                .cpp_sources = cpp_sources,
                 .libraries_to_link = library_artifacts.items,
                 .owned_flags = try flags.toOwnedSlice(),
             });
@@ -216,7 +188,7 @@ pub fn build(b: *std.Build) !void {
         },
         else => {
             const flags_owned = flags.toOwnedSlice() catch @panic("OOM");
-            const all_sources_owned = sources_plus_components.toOwnedSlice() catch @panic("OOM");
+            const all_sources_owned = cpp_sources;
             exe.addCSourceFiles(all_sources_owned, flags_owned);
             tests_lib.addCSourceFiles(all_sources_owned, flags_owned);
             // set up tests (executables which dont link artefacts built from
