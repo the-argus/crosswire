@@ -28,7 +28,7 @@ int main()
 
     set_main_camera(Camera{
         .position = {0, 0, 0}, // Camera position
-        .target = {1, 0, 0},   // Camera target it looks-at
+        .target = {0, -1, 0},  // Camera target it looks-at
         .up = {0, 1, 0},       // Camera up vector (rotation over its axis)
         .fovy = 70.0f, // Camera field-of-view aperture in Y (degrees) in
                        // perspective, used as near plane width in orthographic
