@@ -5,6 +5,7 @@
 #include "globals.hpp"
 #include "input.hpp"
 #include "natural_log/natural_log.hpp"
+#include "physics.hpp"
 #include "render_pipeline.hpp"
 #include <raylib.h>
 
@@ -25,26 +26,66 @@ int main()
     ln::set_minimum_level(ln::level_e::ALL);
     window_setup();
     render_pipeline::init();
+    physics::init();
 
-    set_main_camera(Camera{
-        .position = {0, 0, 0}, // Camera position
-        .target = {0, -1, 0},  // Camera target it looks-at
-        .up = {0, 1, 0},       // Camera up vector (rotation over its axis)
-        .fovy = 70.0f, // Camera field-of-view aperture in Y (degrees) in
-                       // perspective, used as near plane width in orthographic
-        .projection =
-            CAMERA_PERSPECTIVE, // Camera projection: CAMERA_PERSPECTIVE or
-                                // CAMERA_ORTHOGRAPHIC
+    set_main_camera(Camera2D{
+        .offset = {0, 0}, // Camera offset (displacement from target)
+        .target = {0, 0}, // Camera target (rotation and zoom origin)
+        .rotation = 0,    // Camera rotation in degrees
+        .zoom = 1,        // Camera zoom (scaling), should be 1.0f by default
     });
 
+    {
+        physics::body_t body({
+            .type = lib::body_t::Type::DYNAMIC,
+            .mass = 1,
+            .moment = INFINITY,
+        });
+
+        LN_INFO_FMT("Body position: {}", body.get().position());
+        body.get().set_position({100, 100});
+        LN_INFO_FMT("Body position: {}", body.get().position());
+
+        physics::poly_shape_t box(
+            body, {.bounding = lib::rect_t{{0, 0}, {10, 10}}, .radius = 1});
+
+        // permanent shapes
+        {
+            constexpr float hw = GAME_WIDTH / 2.0f;
+            constexpr float hh = GAME_HEIGHT / 2.0f;
+            std::array walls{
+                lib::segment_shape_t::options_t{
+                    .a = {hh, hw}, .b = {-hh, hw}, .radius = 1},
+                lib::segment_shape_t::options_t{
+                    .a = {-hh, hw}, .b = {-hh, -hw}, .radius = 1},
+                lib::segment_shape_t::options_t{
+                    .a = {-hh, -hw}, .b = {hh, -hw}, .radius = 1},
+                lib::segment_shape_t::options_t{
+                    .a = {hh, -hw}, .b = {hh, hw}, .radius = 1},
+            };
+
+            for (auto &wall_options : walls) {
+                physics::create_segment_shape(physics::get_static_body(),
+                                              wall_options);
+            }
+        }
+
+        {
+            lib::shape_t *box_shape = box.get().parent_cast();
+            box_shape->set_sensor(true);
+        }
+
 #ifdef __EMSCRIPTEN__
-    emscripten_set_main_loop(update, 0, 1);
+        emscripten_set_main_loop(update, 0, 1);
 #else
-    while (!WindowShouldClose()) {
-        update();
-    }
+        while (!WindowShouldClose()) {
+            update();
+        }
 #endif
-    CloseWindow();
+        CloseWindow();
+    }
+
+    physics::cleanup();
 
     return 0;
 }
@@ -55,11 +96,13 @@ static void update()
 
     update_virtual_cursor_position(get_screen_scale());
 
+    physics::update(1.0f / 60.0f);
+
     render_pipeline::render(draw, draw_hud);
 }
 
-static void draw() {}
-static void draw_hud() {}
+static void draw() { physics::debug_draw_all_shapes(); }
+static void draw_hud() { DrawFPS(30, 10); }
 
 static void window_setup()
 {

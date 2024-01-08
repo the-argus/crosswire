@@ -5,12 +5,12 @@
 #include <cassert>
 
 /// Global variables
-static lib::opt_t<Camera> camera;
+static lib::opt_t<Camera2D> camera;
 static lib::opt_t<float> screen_scale;
 
 namespace cw {
 
-Camera &get_main_camera() noexcept
+Camera2D &get_main_camera() noexcept
 {
     if (!camera.has_value()) {
         LN_FATAL("Attempt to get main camera, but it was null."); 
@@ -19,7 +19,7 @@ Camera &get_main_camera() noexcept
     return camera.value();
 }
 
-void set_main_camera(Camera cam) noexcept { camera = cam; }
+void set_main_camera(Camera2D cam) noexcept { camera = cam; }
 
 float get_screen_scale() noexcept
 {

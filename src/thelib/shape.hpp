@@ -1,9 +1,9 @@
 #pragma once
 #include "chipmunk/chipmunk.h"
 #include "thelib/rect.hpp"
+#include "thelib/slice.hpp"
 #include "thelib/vect.hpp"
 #include <chipmunk/chipmunk_structs.h>
-#include <ranges>
 
 namespace lib {
 
@@ -76,7 +76,7 @@ class poly_shape_t : public ::cpPolyShape
 
     struct default_options_t
     {
-        std::span<lib::vect_t> vertices;
+        slice_t<vect_t> vertices;
         float radius;
     };
 

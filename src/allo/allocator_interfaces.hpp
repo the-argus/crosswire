@@ -26,6 +26,8 @@ enum class AllocationType
     Singleton,
     StackAllocator,
 
+    Physics,
+
     /// maximum enum value, also should never be used
     Max,
 };

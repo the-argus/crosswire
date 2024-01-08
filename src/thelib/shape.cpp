@@ -122,9 +122,10 @@ poly_shape_t::poly_shape_t(lib::body_t &body,
     static_assert(
         sizeof(cpVect) == sizeof(lib::vect_t),
         "Make sure lib::vect_t and cpVect are laid out identically in memory");
-    cpPolyShapeInitRaw(this, &body, static_cast<int>(options.vertices.size()),
-                       reinterpret_cast<cpVect *>(options.vertices.data()),
-                       options.radius);
+    cpPolyShapeInitRaw(
+        this, &body, static_cast<int>(options.vertices.size()),
+        reinterpret_cast<const cpVect *>(options.vertices.data()),
+        options.radius);
 }
 
 poly_shape_t::poly_shape_t(lib::body_t &body,
