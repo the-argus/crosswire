@@ -46,3 +46,5 @@ result
 *.exe
 *.out
 *.app
+
+.vscode/
