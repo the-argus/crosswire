@@ -52,13 +52,16 @@ void debug_draw_all_shapes() noexcept
     constexpr float hue_increment = 10.0f;
 
     for (lib::poly_shape_t &shape : poly_shapes.value()) {
-        lib::vect_t verts[shape.count()];
+        assert(shape.count() > 1);
+        lib::vect_t verts[shape.count() + 1];
         for (int i = 0; i < shape.count(); ++i) {
             verts[i] =
                 shape.parent_cast()->body()->position() + shape.vertex(i);
         }
+        verts[shape.count()] =
+            shape.parent_cast()->body()->position() + shape.vertex(0);
         ::Color col = ColorFromHSV(hue, 1, 1);
-        DrawLineStrip(verts, shape.count(), col);
+        DrawLineStrip(verts, shape.count() + 1, col);
         hue += hue_increment;
         if (hue > 360.0f)
             hue = 0;
