@@ -3,6 +3,7 @@
 #include "thelib/opt.hpp"
 #include "thelib/shape.hpp"
 #include "thelib/space.hpp"
+#include <raylib.h>
 
 /// Number of physics bodies that we reserve space for at the start
 constexpr size_t initial_reservation = 512;
@@ -33,6 +34,36 @@ void cleanup() noexcept
 
 /// Move all physics objects and potentially call collision handlers
 void update(float timestep) noexcept { space.value().step(timestep); }
+
+void debug_draw_all_shapes() noexcept
+{
+    float hue = 0;
+    constexpr float hue_increment = 10.0f;
+
+    for (lib::poly_shape_t &shape : poly_shapes.value()) {
+        lib::vect_t verts[shape.count()];
+        for (int i = 0; i < shape.count(); ++i) {
+            verts[i] =
+                shape.parent_cast()->body()->position() + shape.vertex(i);
+        }
+        ::Color col = ColorFromHSV(hue, 1, 1);
+        DrawLineStrip(verts, shape.count(), col);
+        hue += hue_increment;
+        if (hue > 360.0f)
+            hue = 0;
+    }
+
+    for (lib::segment_shape_t &shape : segment_shapes.value()) {
+        ::Color col = ColorFromHSV(hue, 1, 1);
+
+        DrawLineV(shape.parent_cast()->body()->position() + shape.a(),
+                  shape.parent_cast()->body()->position() + shape.b(), col);
+
+        hue += hue_increment;
+        if (hue > 360.0f)
+            hue = 0;
+    }
+}
 
 raw_body_t create_body(const lib::body_t::body_options_t &options) noexcept
 {

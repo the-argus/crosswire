@@ -69,6 +69,8 @@ void delete_segment_shape(raw_segment_shape_t) noexcept;
 void delete_polygon_shape(raw_poly_shape_t) noexcept;
 void delete_body(raw_body_t) noexcept;
 
+void debug_draw_all_shapes() noexcept;
+
 lib::body_t &get_body(raw_body_t) noexcept;
 lib::segment_shape_t &get_segment_shape(raw_segment_shape_t) noexcept;
 lib::poly_shape_t &get_polygon_shape(raw_poly_shape_t) noexcept;

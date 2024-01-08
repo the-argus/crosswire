@@ -12,15 +12,15 @@ static void window_draw(float screen_scale);
 namespace cw::render_pipeline {
 void render(void (*game_draw)(), void (*hud_draw)()) noexcept
 {
-    Camera3D *cam = &get_main_camera();
+    Camera2D *cam = &get_main_camera();
     BeginTextureMode(main_target);
     // clang-format off
 		ClearBackground(RAYWHITE);
-        BeginMode3D(*cam);
+        BeginMode2D(*cam);
             // draw in-game objects
             game_draw();
 
-        EndMode3D();
+        EndMode2D();
         // draw hud directly on the screen without camera transforms
         hud_draw();
     // clang-format on
