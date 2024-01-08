@@ -13,7 +13,7 @@ namespace cw {
 Camera &get_main_camera() noexcept
 {
     if (!camera.has_value()) {
-        LN_FATAL("Attempt to get main camera, but it was null.");
+        LN_FATAL("Attempt to get main camera, but it was null."); 
         std::abort();
     }
     return camera.value();
