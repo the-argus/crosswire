@@ -5,6 +5,7 @@
 #include "globals.hpp"
 #include "input.hpp"
 #include "natural_log/natural_log.hpp"
+#include "physics.hpp"
 #include "render_pipeline.hpp"
 #include <raylib.h>
 
@@ -25,6 +26,7 @@ int main()
     ln::set_minimum_level(ln::level_e::ALL);
     window_setup();
     render_pipeline::init();
+    physics::init();
 
     set_main_camera(Camera{
         .position = {0, 0, 0}, // Camera position
@@ -37,14 +39,34 @@ int main()
                                 // CAMERA_ORTHOGRAPHIC
     });
 
+    {
+        physics::body_t body({
+            .type = lib::body_t::Type::DYNAMIC,
+            .mass = 1,
+            .moment = INFINITY,
+        });
+
+        LN_INFO_FMT("Body position: ", body.get().position());
+
+        physics::poly_shape_t box(
+            body, {.bounding = lib::rect_t{{0, 0}, {10, 10}}, .radius = 1});
+
+        {
+            lib::shape_t *box_shape = box.get().parent_cast();
+            box_shape->set_sensor(true);
+        }
+
 #ifdef __EMSCRIPTEN__
-    emscripten_set_main_loop(update, 0, 1);
+        emscripten_set_main_loop(update, 0, 1);
 #else
-    while (!WindowShouldClose()) {
-        update();
-    }
+        while (!WindowShouldClose()) {
+            update();
+        }
 #endif
-    CloseWindow();
+        CloseWindow();
+    }
+
+    physics::cleanup();
 
     return 0;
 }
@@ -54,6 +76,8 @@ static void update()
     update_screen_scale();
 
     update_virtual_cursor_position(get_screen_scale());
+
+    physics::update(1.0f / 60.0f);
 
     render_pipeline::render(draw, draw_hud);
 }

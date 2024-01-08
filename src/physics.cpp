@@ -1,6 +1,4 @@
 #include "physics.hpp"
-#include "allo/pool_allocator_generational.hpp"
-#include "root_allocator.hpp"
 #include "thelib/body.hpp"
 #include "thelib/opt.hpp"
 #include "thelib/shape.hpp"
@@ -9,29 +7,9 @@
 /// Number of physics bodies that we reserve space for at the start
 constexpr size_t initial_reservation = 512;
 
-constexpr allo::pool_allocator_generational_options_t physics_memory_options{
-    .allocator = cw::root_allocator,
-    .allocation_type = allo::interfaces::AllocationType::Physics,
-    .reallocating = true,
-    .reallocation_ratio = 1.5f,
-};
-
-using poly_shape_allocator = allo::pool_allocator_generational_t<
-    lib::poly_shape_t, physics_memory_options, cw::physics::index_t,
-    cw::physics::gen_t>;
-
-using body_allocator =
-    allo::pool_allocator_generational_t<lib::body_t, physics_memory_options,
-                                        cw::physics::index_t,
-                                        cw::physics::gen_t>;
-
-using segment_shape_allocator = allo::pool_allocator_generational_t<
-    lib::segment_shape_t, physics_memory_options, cw::physics::index_t,
-    cw::physics::gen_t>;
-
-static lib::opt_t<poly_shape_allocator> poly_shapes;
-static lib::opt_t<segment_shape_allocator> segment_shapes;
-static lib::opt_t<body_allocator> bodies;
+static lib::opt_t<cw::physics::poly_shape_allocator> poly_shapes;
+static lib::opt_t<cw::physics::segment_shape_allocator> segment_shapes;
+static lib::opt_t<cw::physics::body_allocator> bodies;
 static lib::opt_t<lib::space_t> space;
 
 namespace cw::physics {
@@ -66,19 +44,34 @@ raw_body_t create_body(const lib::body_t::body_options_t &options) noexcept
         std::abort();
     }
 
-    auto handle = stock_handle.release();
-    static_assert(sizeof(decltype(handle)) == sizeof(raw_body_t));
-    static_assert(alignof(decltype(handle)) == alignof(raw_body_t));
-    // WARNING: reinterpret cast here is so that pool allocator remains a
-    // private dependency of this module
-    return *reinterpret_cast<raw_body_t *>(&stock_handle);
+    return stock_handle.release();
+}
+
+static lib::body_t &lookup_body(const raw_body_t &body_handle)
+{
+    auto body_res = bodies.value().get(body_handle);
+
+    if (!body_res.okay()) [[unlikely]] {
+        if (body_handle == get_static_body()) [[likely]] {
+            auto *static_body = space.value().get_static_body();
+            assert(static_body);
+            return *static_body;
+        }
+
+        LN_FATAL_FMT("Failed to look up body with errcode {}",
+                     fmt::underlying(body_res.status()));
+        std::abort();
+    }
+
+    return body_res.release();
 }
 
 raw_segment_shape_t
 create_segment_shape(const raw_body_t &body_handle,
                      const lib::segment_shape_t::options_t &options) noexcept
 {
-    auto stock_handle = segment_shapes.value().alloc_new(options);
+    auto stock_handle =
+        segment_shapes.value().alloc_new(lookup_body(body_handle), options);
 
     if (!stock_handle.okay()) [[unlikely]] {
         LN_FATAL_FMT("Failed to allocate physics body due to errcode {}",
@@ -86,28 +79,13 @@ create_segment_shape(const raw_body_t &body_handle,
         std::abort();
     }
 
-    auto handle = stock_handle.release();
-    static_assert(sizeof(decltype(handle)) == sizeof(raw_body_t));
-    static_assert(alignof(decltype(handle)) == alignof(raw_body_t));
-    // WARNING: reinterpret cast here is so that pool allocator remains a
-    // private dependency of this module
-    return *reinterpret_cast<raw_segment_shape_t *>(&stock_handle);
+    return stock_handle.release();
 }
 
 auto poly_shape_impl = [](const raw_body_t &body_handle,
                           auto options) -> raw_poly_shape_t {
-    auto body_res = bodies.value().get_const(
-        *reinterpret_cast<const body_allocator::handle_t *>(&body_handle));
-
-    if (!body_res.okay()) [[unlikely]] {
-        LN_FATAL_FMT("Attempt to initialize poly shape but an invalid physics "
-                     "body handle was passed in. Looking it up in the "
-                     "allocator caused error code {}",
-                     fmt::underlying(body_res.status()));
-    }
-
     auto stock_handle =
-        poly_shapes.value().alloc_new(body_res.release(), options);
+        poly_shapes.value().alloc_new(lookup_body(body_handle), options);
 
     if (!stock_handle.okay()) [[unlikely]] {
         LN_FATAL_FMT("Failed to allocate physics body due to errcode {}",
@@ -115,12 +93,7 @@ auto poly_shape_impl = [](const raw_body_t &body_handle,
         std::abort();
     }
 
-    auto handle = stock_handle.release();
-    static_assert(sizeof(decltype(handle)) == sizeof(raw_body_t));
-    static_assert(alignof(decltype(handle)) == alignof(raw_body_t));
-    // WARNING: reinterpret cast here is so that pool allocator remains a
-    // private dependency of this module
-    return *reinterpret_cast<raw_poly_shape_t *>(&stock_handle);
+    return stock_handle.release();
 };
 
 /// Create a box shape attached to a body
@@ -141,8 +114,7 @@ raw_poly_shape_t create_polygon_shape(
 
 lib::body_t &get_body(raw_body_t handle) noexcept
 {
-    auto body_res = bodies.value().get(
-        *reinterpret_cast<body_allocator::handle_t *>(&handle));
+    auto body_res = bodies.value().get(handle);
     if (!body_res.okay()) {
         LN_FATAL("Failed to get body from physics::get_body");
         std::abort();
@@ -152,8 +124,7 @@ lib::body_t &get_body(raw_body_t handle) noexcept
 
 lib::segment_shape_t &get_segment_shape(raw_segment_shape_t handle) noexcept
 {
-    auto segment_shape_res = segment_shapes.value().get(
-        *reinterpret_cast<segment_shape_allocator::handle_t *>(&handle));
+    auto segment_shape_res = segment_shapes.value().get(handle);
     if (!segment_shape_res.okay()) {
         LN_FATAL("Failed to get segment shape from physics::get_segment_shape");
         std::abort();
@@ -163,13 +134,45 @@ lib::segment_shape_t &get_segment_shape(raw_segment_shape_t handle) noexcept
 
 lib::poly_shape_t &get_polygon_shape(raw_poly_shape_t handle) noexcept
 {
-    auto poly_shape_res = poly_shapes.value().get(
-        *reinterpret_cast<poly_shape_allocator::handle_t *>(&handle));
+    auto poly_shape_res = poly_shapes.value().get(handle);
     if (!poly_shape_res.okay()) {
         LN_FATAL("Failed to get polygon shape from physics::get_polygon_shape");
         std::abort();
     }
     return poly_shape_res.release();
+}
+
+void delete_segment_shape(raw_segment_shape_t handle) noexcept
+{
+    auto status = segment_shapes.value().free(handle);
+    if (!status.okay()) [[unlikely]] {
+        LN_WARN_FMT("Failed to free segment shape with errcode {}",
+                    fmt::underlying(status.status()));
+    }
+}
+
+void delete_polygon_shape(raw_poly_shape_t handle) noexcept
+{
+    auto status = poly_shapes.value().free(handle);
+    if (!status.okay()) [[unlikely]] {
+        LN_WARN_FMT("Failed to free polygon shape with errcode {}",
+                    fmt::underlying(status.status()));
+    }
+}
+
+void delete_body(raw_body_t handle) noexcept
+{
+    if (handle == get_static_body()) [[unlikely]] {
+        LN_ERROR("Attempt to delete the global static body? Ignoring invalid "
+                 "request.");
+        return;
+    }
+
+    auto status = bodies.value().free(handle);
+    if (!status.okay()) [[unlikely]] {
+        LN_WARN_FMT("Failed to free physics body with errcode {}",
+                    fmt::underlying(status.status()));
+    }
 }
 
 } // namespace cw::physics

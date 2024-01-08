@@ -1,4 +1,6 @@
 #pragma once
+#include "allo/pool_allocator_generational.hpp"
+#include "root_allocator.hpp"
 #include "thelib/body.hpp"
 #include "thelib/shape.hpp"
 #include <cstddef>
@@ -8,11 +10,37 @@ namespace cw::physics {
 using index_t = size_t;
 using gen_t = size_t;
 
-template <typename T> struct handle_t;
+inline constexpr index_t invalid_index = index_t(0) - index_t(1);
+inline constexpr gen_t invalid_generation = gen_t(0) - gen_t(1);
 
-using raw_body_t = handle_t<lib::body_t>;
-using raw_segment_shape_t = handle_t<lib::segment_shape_t>;
-using raw_poly_shape_t = handle_t<lib::poly_shape_t>;
+template <typename T>
+requires(std::is_same_v<T, lib::segment_shape_t> ||
+         std::is_same_v<T, lib::poly_shape_t> ||
+         std::is_same_v<T, lib::body_t>) struct owning_handle_t;
+
+constexpr allo::pool_allocator_generational_options_t physics_memory_options{
+    .allocator = cw::root_allocator,
+    .allocation_type = allo::interfaces::AllocationType::Physics,
+    .reallocating = true,
+    .reallocation_ratio = 1.5f,
+};
+
+using poly_shape_allocator = allo::pool_allocator_generational_t<
+    lib::poly_shape_t, physics_memory_options, cw::physics::index_t,
+    cw::physics::gen_t>;
+
+using body_allocator =
+    allo::pool_allocator_generational_t<lib::body_t, physics_memory_options,
+                                        cw::physics::index_t,
+                                        cw::physics::gen_t>;
+
+using segment_shape_allocator = allo::pool_allocator_generational_t<
+    lib::segment_shape_t, physics_memory_options, cw::physics::index_t,
+    cw::physics::gen_t>;
+
+using raw_body_t = body_allocator::handle_t;
+using raw_segment_shape_t = segment_shape_allocator::handle_t;
+using raw_poly_shape_t = poly_shape_allocator::handle_t;
 
 /// Initialize physics related resources
 void init() noexcept;
@@ -39,31 +67,47 @@ raw_poly_shape_t create_polygon_shape(const raw_body_t &body_handle, const lib::
 
 void delete_segment_shape(raw_segment_shape_t) noexcept;
 void delete_polygon_shape(raw_poly_shape_t) noexcept;
-void delete_body_shape(raw_body_t) noexcept;
+void delete_body(raw_body_t) noexcept;
 
 lib::body_t &get_body(raw_body_t) noexcept;
 lib::segment_shape_t &get_segment_shape(raw_segment_shape_t) noexcept;
 lib::poly_shape_t &get_polygon_shape(raw_poly_shape_t) noexcept;
 
-template <typename T> struct handle_t
+/// Return a special handle which points to the global space's static body
+constexpr inline raw_body_t get_static_body() noexcept
 {
-    handle_t() = delete;
-
-  private:
-    // NOLINTNEXTLINE
-    inline constexpr handle_t(index_t index, gen_t generation) noexcept
-        : index(index), generation(generation)
+    union uninitialized_handle
     {
-    }
-    index_t index;
-    gen_t generation;
-};
+        raw_body_t body;
+        uint8_t none;
+        constexpr inline uninitialized_handle() noexcept
+        {
+            std::memset(this, 0, sizeof(uninitialized_handle));
+        }
+    };
+    static_assert(sizeof(uninitialized_handle) == sizeof(raw_body_t));
+    return uninitialized_handle().body;
+}
 
 template <typename T>
 requires(std::is_same_v<T, lib::segment_shape_t> ||
          std::is_same_v<T, lib::poly_shape_t> ||
          std::is_same_v<T, lib::body_t>) struct owning_handle_t
 {
+    using raw_handle_type = typename allo::pool_allocator_generational_t<
+        T, physics_memory_options>::handle_t;
+
+  private:
+    constexpr owning_handle_t(const raw_handle_type &inner) noexcept
+        : inner(inner)
+    {
+    }
+
+    raw_handle_type inner;
+
+  public:
+    [[nodiscard]] const raw_handle_type &raw() const noexcept { return inner; }
+
     owning_handle_t() = delete;
 
     /// Get a reference to the actual thing the handle is pointing to
@@ -111,21 +155,16 @@ requires(std::is_same_v<T, lib::segment_shape_t> ||
     {
     }
 
-    inline ~owning_handle_t() noexcept
+    constexpr inline ~owning_handle_t() noexcept
     {
         if constexpr (std::is_same_v<T, lib::body_t>) {
-            delete_body_shape(inner);
+            delete_body(inner);
         } else if constexpr (std::is_same_v<T, lib::segment_shape_t>) {
             delete_segment_shape(inner);
         } else if constexpr (std::is_same_v<T, lib::poly_shape_t>) {
             delete_polygon_shape(inner);
         }
     }
-
-  private:
-    [[nodiscard]] const handle_t<T> &raw() const noexcept { return inner; }
-
-    handle_t<T> inner;
 };
 
 using body_t = owning_handle_t<lib::body_t>;

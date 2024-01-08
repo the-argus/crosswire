@@ -95,13 +95,34 @@ requires(
     {
         friend class pool_allocator_generational_t;
 
+        /// Get the index of this handle. Is only intended to be used in special
+        /// cases, if youre using this and you don't know what you're doing,
+        /// please stop.
+        [[nodiscard]] constexpr inline index_t index() const noexcept
+        {
+            return m_index;
+        }
+        /// Get the generation of this handle. Is only intended to be used in
+        /// special cases, if youre using this and you don't know what you're
+        /// doing, please stop.
+        [[nodiscard]] constexpr inline gen_t generation() const noexcept
+        {
+            return m_generation;
+        }
+
+        inline constexpr friend bool
+        operator==(const handle_t &a, const handle_t &b) TESTING_NOEXCEPT
+        {
+            return a.m_index == b.m_index && b.m_generation == a.m_generation;
+        };
+
       private:
-        inline constexpr handle_t(index_t index, gen_t generation) noexcept
-            : index(index), generation(generation)
+        inline constexpr handle_t(index_t _index, gen_t _generation) noexcept
+            : m_index(_index), m_generation(_generation)
         {
         }
-        index_t index;
-        gen_t generation;
+        index_t m_index;
+        gen_t m_generation;
     };
 
     enum class alloc_err_code_e : uint8_t
@@ -242,15 +263,15 @@ requires(
 
         // destroy, mark as free, increase generation
         itemref.data.~T();
-        ++m_generation_buffer.data()[handle.index];
-        m_activity_buffer.data()[handle.index] = false;
+        ++m_generation_buffer.data()[handle.index()];
+        m_activity_buffer.data()[handle.index()] = false;
 
         // overwrite destroyed object with an index pointing to the last free
         // index
         itemref.index = m_last_free_index;
 
         // mark this location as the next available spot for allocation
-        m_last_free_index = handle.index;
+        m_last_free_index = handle.index();
 
         ++m_spots_free;
 
@@ -426,28 +447,28 @@ requires(
     {
         using code = lookup_return_code_e;
 
-        if (handle.index >= m_end_guess)
+        if (handle.index() >= m_end_guess)
             return code::IndexOutOfRange;
 
-        if (handle.generation == 0 || handle.generation > m_max_generation)
+        if (handle.generation() == 0 || handle.generation() > m_max_generation)
             return code::InvalidGeneration;
 
-        if (!m_activity_buffer.data()[handle.index])
+        if (!m_activity_buffer.data()[handle.index()])
             return code::Freed;
 
         {
-            const auto gen = m_generation_buffer.data()[handle.index];
+            const auto gen = m_generation_buffer.data()[handle.index()];
             if (gen == 0)
                 return code::InvalidIndex;
 
-            if (gen < handle.generation)
+            if (gen < handle.generation())
                 return code::InvalidGeneration;
 
-            if (gen > handle.generation)
+            if (gen > handle.generation())
                 return code::OldGeneration;
         }
 
-        return m_items_buffer.data()[handle.index];
+        return m_items_buffer.data()[handle.index()];
     }
 
     /// Lookup based only on an index and no generation. Used by iterator
