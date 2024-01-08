@@ -32,6 +32,17 @@ void cleanup() noexcept
     space.reset();
 }
 
+void add_collision_handler(const cpCollisionHandler &handler) noexcept
+{
+    cpCollisionHandler *new_handler = cpSpaceAddCollisionHandler(
+        &space.value(), handler.typeA, handler.typeB);
+    new_handler->postSolveFunc = handler.postSolveFunc;
+    new_handler->preSolveFunc = handler.preSolveFunc;
+    new_handler->userData = handler.userData;
+    new_handler->beginFunc = handler.beginFunc;
+    new_handler->separateFunc = handler.separateFunc;
+}
+
 /// Move all physics objects and potentially call collision handlers
 void update(float timestep) noexcept { space.value().step(timestep); }
 

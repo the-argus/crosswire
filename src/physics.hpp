@@ -51,6 +51,30 @@ void cleanup() noexcept;
 /// Move all physics objects and potentially call collision handlers
 void update(float timestep) noexcept;
 
+/// Add a collision handler which triggers whenever a certain two kinds of shape
+/// collide.
+///
+/// beginFunc: function that gets called when two shapes of the given types
+/// *start* colliding. Returning false from this function will make it so that
+/// those two shapes dont generate collisions with each other for this
+/// collision. Once they separate, they may collide again, and beginFunc will be
+/// called again.
+///
+/// preSolveFunc: function that runs when two shapes overlap, but before they
+/// have been resolved to be in the correct locations. So if typeA is a wall and
+/// typeB is a ball, the ball will still be inside the wall when this function
+/// gets called. You can return false from this function to cancel the effects
+/// of the collision.
+///
+/// postSolveFunc: This is called after collision happens, so you'll get
+/// information about the normal of the collision and the contact points and all
+/// that good stuff. The ball would be outside of the wall at this point.
+///
+/// separateFunc: Function that gets called whenever two bodies stop colliding.
+/// According to chipmunk docs, it is guaranteed to always be called in even
+/// amounts with the beginFunc.
+void add_collision_handler(const cpCollisionHandler &handler) noexcept;
+
 /// Create a physics body and return a handle to it.
 raw_body_t create_body(const lib::body_t::body_options_t &options) noexcept;
 
