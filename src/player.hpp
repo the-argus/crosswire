@@ -16,7 +16,7 @@ namespace cw {
             player_t();
 
         private:
-            static constexpr float speed = 20;
+            static constexpr float speed = 100;
             static constexpr float bounding_box_size = 10;
             physics::raw_body_t body;
             physics::raw_poly_shape_t shape;

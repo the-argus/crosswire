@@ -22,9 +22,9 @@ player_t::player_t()
 
 void player_t::draw() {
     // draw sprite
-    lib::vect_t pos = physics::get_body(body).position();
+    //lib::vect_t pos = physics::get_body(body).position();
 
-    DrawRectangle(pos.x, pos.y, bounding_box_size, bounding_box_size, RED);
+    //DrawRectangle(pos.x, pos.y, bounding_box_size, bounding_box_size, RED);
 }
 void player_t::update() {
     lib::vect_t velocity(0);
