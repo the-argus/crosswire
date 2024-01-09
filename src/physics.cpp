@@ -26,6 +26,19 @@ void init() noexcept
 /// Delete all physics data
 void cleanup() noexcept
 {
+    // TODO: figure out why iterating over bodies and poly_shapes causes bad
+    // iterator access error?
+
+    // for (lib::body_t &body : bodies.value()) {
+    //     space.value().remove(body);
+    // }
+    // for (lib::poly_shape_t &shape : poly_shapes.value()) {
+    //     space.value().remove(*shape.parent_cast());
+    // }
+
+    for (lib::segment_shape_t &shape : segment_shapes.value()) {
+        space.value().remove(*shape.parent_cast());
+    }
     poly_shapes.reset();
     segment_shapes.reset();
     bodies.reset();
@@ -89,7 +102,13 @@ raw_body_t create_body(const lib::body_t::body_options_t &options) noexcept
         std::abort();
     }
 
-    return stock_handle.release();
+    auto handle = stock_handle.release();
+
+    auto body_lookup = bodies.value().get(handle);
+    lib::body_t &body = body_lookup.release();
+    space.value().add(body);
+
+    return handle;
 }
 
 static lib::body_t &lookup_body(const raw_body_t &body_handle)
@@ -124,7 +143,12 @@ create_segment_shape(const raw_body_t &body_handle,
         std::abort();
     }
 
-    return stock_handle.release();
+    auto handle = stock_handle.release();
+    auto shape_lookup = segment_shapes.value().get(handle);
+    lib::segment_shape_t &shape = shape_lookup.release();
+    space.value().add(*shape.parent_cast());
+
+    return handle;
 }
 
 auto poly_shape_impl = [](const raw_body_t &body_handle,
@@ -138,7 +162,12 @@ auto poly_shape_impl = [](const raw_body_t &body_handle,
         std::abort();
     }
 
-    return stock_handle.release();
+    auto handle = stock_handle.release();
+    auto shape_lookup = poly_shapes.value().get(handle);
+    lib::poly_shape_t &shape = shape_lookup.release();
+    space.value().add(*shape.parent_cast());
+
+    return handle;
 };
 
 /// Create a box shape attached to a body
@@ -189,6 +218,14 @@ lib::poly_shape_t &get_polygon_shape(raw_poly_shape_t handle) noexcept
 
 void delete_segment_shape(raw_segment_shape_t handle) noexcept
 {
+    auto maybe_shape = segment_shapes.value().get(handle);
+    if (!maybe_shape.okay()) [[unlikely]] {
+        LN_WARN("attempt to free invalid segment shape");
+        return;
+    }
+
+    space.value().remove(*maybe_shape.release().parent_cast());
+
     auto status = segment_shapes.value().free(handle);
     if (!status.okay()) [[unlikely]] {
         LN_WARN_FMT("Failed to free segment shape with errcode {}",
@@ -198,6 +235,14 @@ void delete_segment_shape(raw_segment_shape_t handle) noexcept
 
 void delete_polygon_shape(raw_poly_shape_t handle) noexcept
 {
+    auto maybe_shape = poly_shapes.value().get(handle);
+    if (!maybe_shape.okay()) [[unlikely]] {
+        LN_WARN("Attempt to free invalid polygon shape");
+        return;
+    }
+
+    space.value().remove(*maybe_shape.release().parent_cast());
+
     auto status = poly_shapes.value().free(handle);
     if (!status.okay()) [[unlikely]] {
         LN_WARN_FMT("Failed to free polygon shape with errcode {}",
@@ -212,6 +257,14 @@ void delete_body(raw_body_t handle) noexcept
                  "request.");
         return;
     }
+
+    auto maybe_body = bodies.value().get(handle);
+    if (!maybe_body.okay()) [[unlikely]] {
+        LN_WARN("Attempt to free invalid body");
+        return;
+    }
+
+    space.value().remove(maybe_body.release());
 
     auto status = bodies.value().free(handle);
     if (!status.okay()) [[unlikely]] {

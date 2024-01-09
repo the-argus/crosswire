@@ -170,7 +170,7 @@ requires(std::is_same_v<T, lib::segment_shape_t> ||
     inline owning_handle_t(
         const owning_handle_t<lib::body_t> &body_handle,
         const lib::segment_shape_t::options_t &options) noexcept requires
-        std::is_same_v<T, lib::poly_shape_t>
+        std::is_same_v<T, lib::segment_shape_t>
         : inner(create_segment_shape(body_handle.raw(), options))
     {
     }
