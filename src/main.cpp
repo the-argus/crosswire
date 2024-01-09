@@ -36,7 +36,7 @@ int main()
     my_player.emplace();
 
     set_main_camera(Camera2D{
-        .offset = {0, 0}, // Camera offset (displacement from target)
+        .offset = {GAME_WIDTH/2, GAME_HEIGHT/2}, // Camera offset (displacement from target)
         .target = {0, 0}, // Camera target (rotation and zoom origin)
         .rotation = 0,    // Camera rotation in degrees
         .zoom = 1,        // Camera zoom (scaling), should be 1.0f by default
