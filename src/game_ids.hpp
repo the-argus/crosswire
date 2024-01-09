@@ -25,6 +25,10 @@ enum class game_id_e : uint8_t
     INVALID_MAX, // ------------------------------------------------------------
 };
 
+inline constexpr size_t num_terrain_ids =
+    uint8_t(cw::game_id_e::INVALID_MAX) -
+    uint8_t(cw::game_id_e::INVALID_SECT_2_BEGIN) - 1;
+
 /// possible things that can happen when you try to get the ID out of a physics
 /// body or shape.
 enum class physics_object_get_id_result_e : uint8_t
