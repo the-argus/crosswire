@@ -7,7 +7,9 @@
 #include "natural_log/natural_log.hpp"
 #include "physics.hpp"
 #include "render_pipeline.hpp"
+#include "thelib/opt.hpp"
 #include <raylib.h>
+#include "player.hpp"
 
 using namespace cw;
 
@@ -15,6 +17,8 @@ static void window_setup();
 static void update();
 static void draw();
 static void draw_hud();
+
+static lib::opt_t<player_t> my_player;
 
 #ifdef __EMSCRIPTEN__
 extern "C" int emsc_main(void)
@@ -27,6 +31,9 @@ int main()
     window_setup();
     render_pipeline::init();
     physics::init();
+    
+    // wait to initialize player until after physics
+    my_player.emplace();
 
     set_main_camera(Camera2D{
         .offset = {0, 0}, // Camera offset (displacement from target)
@@ -85,6 +92,8 @@ int main()
         CloseWindow();
     }
 
+    // destroy player before cleaning up physics. not necessary but cool!!!!!
+    my_player.reset();
     physics::cleanup();
 
     return 0;
@@ -95,13 +104,17 @@ static void update()
     update_screen_scale();
 
     update_virtual_cursor_position(get_screen_scale());
+    my_player.value().update();
 
     physics::update(1.0f / 60.0f);
 
     render_pipeline::render(draw, draw_hud);
 }
 
-static void draw() { physics::debug_draw_all_shapes(); }
+static void draw() { 
+    my_player.value().draw();
+    physics::debug_draw_all_shapes(); 
+}
 static void draw_hud() { DrawFPS(30, 10); }
 
 static void window_setup()
