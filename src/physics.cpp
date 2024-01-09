@@ -18,6 +18,11 @@ namespace cw::physics {
 void init() noexcept
 {
     space.emplace();
+    // space.value().set_collision_slop(0.1);
+    // space.value().set_iterations(10);
+
+    // fix 50% of collision overlap per frame at 60hz
+    space.value().set_collision_bias(powf(1.0 - 0.5, 60.0));
     poly_shapes.emplace(initial_reservation);
     segment_shapes.emplace(initial_reservation);
     bodies.emplace(initial_reservation);
