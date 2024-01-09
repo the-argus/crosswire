@@ -61,9 +61,8 @@ void player_t::update() {
     // Lerp the camera to the players position
     lib::vect_t pos = physics::get_body(body).position();
     
-    Camera2D camera_player = cw::get_main_camera();
+    Camera2D& camera_player = cw::get_main_camera();
     camera_player.target.x += (pos.x - camera_player.target.x) / cam_followspeed;
     camera_player.target.y += (pos.y - camera_player.target.y) / cam_followspeed;
-    cw::set_main_camera(camera_player);
 }
 }
