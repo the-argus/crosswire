@@ -6,10 +6,10 @@
 #include "input.hpp"
 #include "natural_log/natural_log.hpp"
 #include "physics.hpp"
+#include "player.hpp"
 #include "render_pipeline.hpp"
 #include "thelib/opt.hpp"
 #include <raylib.h>
-#include "player.hpp"
 
 using namespace cw;
 
@@ -19,6 +19,9 @@ static void draw();
 static void draw_hud();
 
 static lib::opt_t<player_t> my_player;
+
+Texture2D sixty_four;
+Texture2D one_twenty_eight;
 
 #ifdef __EMSCRIPTEN__
 extern "C" int emsc_main(void)
@@ -31,7 +34,7 @@ int main()
     window_setup();
     render_pipeline::init();
     physics::init();
-    
+
     // wait to initialize player until after physics
     my_player.emplace();
 
@@ -41,6 +44,9 @@ int main()
         .rotation = 0,    // Camera rotation in degrees
         .zoom = 1,        // Camera zoom (scaling), should be 1.0f by default
     });
+
+    sixty_four = LoadTexture("assets/64.png");
+    one_twenty_eight = LoadTexture("assets/128.png");
 
     {
         physics::body_t body({
@@ -111,9 +117,19 @@ static void update()
     render_pipeline::render(draw, draw_hud);
 }
 
-static void draw() { 
+static void draw()
+{
     my_player.value().draw();
-    physics::debug_draw_all_shapes(); 
+    physics::debug_draw_all_shapes();
+    DrawTextureRec(
+        one_twenty_eight,
+        lib::rect_t({}, {static_cast<float>(one_twenty_eight.width),
+                         static_cast<float>(one_twenty_eight.height)}),
+        {0, 0}, ::WHITE);
+    DrawTextureRec(sixty_four,
+                   lib::rect_t({}, {static_cast<float>(sixty_four.width),
+                                    static_cast<float>(sixty_four.height)}),
+                   {150, 150}, ::WHITE);
 }
 static void draw_hud() { DrawFPS(30, 10); }
 
