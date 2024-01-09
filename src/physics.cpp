@@ -97,7 +97,8 @@ void debug_draw_all_shapes() noexcept
     }
 }
 
-raw_body_t create_body(const lib::body_t::body_options_t &options) noexcept
+raw_body_t create_body(game_id_e id,
+                       const lib::body_t::body_options_t &options) noexcept
 {
     auto stock_handle = bodies.value().alloc_new(options);
 
@@ -112,6 +113,8 @@ raw_body_t create_body(const lib::body_t::body_options_t &options) noexcept
     auto body_lookup = bodies.value().get(handle);
     lib::body_t &body = body_lookup.release();
     space.value().add(body);
+
+    set_physics_id(body, id);
 
     return handle;
 }
@@ -139,8 +142,8 @@ raw_segment_shape_t
 create_segment_shape(const raw_body_t &body_handle,
                      const lib::segment_shape_t::options_t &options) noexcept
 {
-    auto stock_handle =
-        segment_shapes.value().alloc_new(lookup_body(body_handle), options);
+    auto &body = lookup_body(body_handle);
+    auto stock_handle = segment_shapes.value().alloc_new(body, options);
 
     if (!stock_handle.okay()) [[unlikely]] {
         LN_FATAL_FMT("Failed to allocate physics body due to errcode {}",
@@ -153,13 +156,15 @@ create_segment_shape(const raw_body_t &body_handle,
     lib::segment_shape_t &shape = shape_lookup.release();
     space.value().add(*shape.parent_cast());
 
+    shape.parent_cast()->userData = body.userData;
+
     return handle;
 }
 
 auto poly_shape_impl = [](const raw_body_t &body_handle,
                           auto options) -> raw_poly_shape_t {
-    auto stock_handle =
-        poly_shapes.value().alloc_new(lookup_body(body_handle), options);
+    auto &body = lookup_body(body_handle);
+    auto stock_handle = poly_shapes.value().alloc_new(body, options);
 
     if (!stock_handle.okay()) [[unlikely]] {
         LN_FATAL_FMT("Failed to allocate physics body due to errcode {}",
@@ -171,6 +176,8 @@ auto poly_shape_impl = [](const raw_body_t &body_handle,
     auto shape_lookup = poly_shapes.value().get(handle);
     lib::poly_shape_t &shape = shape_lookup.release();
     space.value().add(*shape.parent_cast());
+
+    shape.parent_cast()->userData = body.userData;
 
     return handle;
 };
