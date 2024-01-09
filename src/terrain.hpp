@@ -6,8 +6,8 @@
 namespace cw::terrain {
 void init();
 
-void load(game_id_e terrain_id,
-          const lib::poly_shape_t::default_options_t &options);
+void load_polygon(game_id_e terrain_id,
+                  const lib::poly_shape_t::default_options_t &options);
 
 /// Delete all terrain sprites and physics objects
 void clear_level();

@@ -39,9 +39,23 @@ void init()
     }
 }
 
-void load(game_id_e terrain_id,
-          const lib::poly_shape_t::default_options_t &options)
+void load_polygon(game_id_e terrain_id,
+                  const lib::poly_shape_t::default_options_t &options)
 {
+    if (!shapes_by_id.has_value()) {
+        LN_WARN("Attempt to create a terrain polygon, but the terrain module "
+                "has not been initialized.");
+        return;
+    }
+
+    assert(terrain_id > game_id_e::INVALID_SECT_2_BEGIN);
+    uint8_t index =
+        uint8_t(terrain_id) - uint8_t(game_id_e::INVALID_SECT_2_BEGIN);
+
+    auto body = static_body_by_id.value()[index];
+
+    shapes_by_id.value()[index].push_back(
+        physics::create_polygon_shape(body, options));
 }
 
 void clear_level()
@@ -61,9 +75,6 @@ void clear_level()
             physics::delete_polygon_shape(shape);
         }
     }
-
-    static_body_by_id.reset();
-    shapes_by_id.reset();
 }
 
 void cleanup()
@@ -74,5 +85,7 @@ void cleanup()
         return;
     }
     clear_level();
+    static_body_by_id.reset();
+    shapes_by_id.reset();
 }
 } // namespace cw::terrain
