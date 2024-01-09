@@ -45,8 +45,8 @@ int main()
         .zoom = 1,        // Camera zoom (scaling), should be 1.0f by default
     });
 
-    sixty_four = LoadTexture("assets/64.png");
-    one_twenty_eight = LoadTexture("assets/128.png");
+    sixty_four = LoadTexture("assets/programmer/64.png");
+    one_twenty_eight = LoadTexture("assets/programmer/128.png");
 
     {
         physics::body_t body({
