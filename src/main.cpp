@@ -6,10 +6,10 @@
 #include "input.hpp"
 #include "natural_log/natural_log.hpp"
 #include "physics.hpp"
+#include "player.hpp"
 #include "render_pipeline.hpp"
 #include "thelib/opt.hpp"
 #include <raylib.h>
-#include "player.hpp"
 
 using namespace cw;
 
@@ -31,7 +31,7 @@ int main()
     window_setup();
     render_pipeline::init();
     physics::init();
-    
+
     // wait to initialize player until after physics
     my_player.emplace();
 
@@ -43,19 +43,6 @@ int main()
     });
 
     {
-        physics::body_t body({
-            .type = lib::body_t::Type::DYNAMIC,
-            .mass = 1,
-            .moment = INFINITY,
-        });
-
-        LN_INFO_FMT("Body position: {}", body.get().position());
-        body.get().set_position({100, 100});
-        LN_INFO_FMT("Body position: {}", body.get().position());
-
-        physics::poly_shape_t box(
-            body, {.bounding = lib::rect_t{{0, 0}, {10, 10}}, .radius = 1});
-
         // permanent shapes
         {
             constexpr float hw = GAME_WIDTH / 2.0f;
@@ -75,11 +62,6 @@ int main()
                 physics::create_segment_shape(physics::get_static_body(),
                                               wall_options);
             }
-        }
-
-        {
-            lib::shape_t *box_shape = box.get().parent_cast();
-            box_shape->set_sensor(true);
         }
 
 #ifdef __EMSCRIPTEN__
@@ -111,9 +93,10 @@ static void update()
     render_pipeline::render(draw, draw_hud);
 }
 
-static void draw() { 
+static void draw()
+{
     my_player.value().draw();
-    physics::debug_draw_all_shapes(); 
+    physics::debug_draw_all_shapes();
 }
 static void draw_hud() { DrawFPS(30, 10); }
 
