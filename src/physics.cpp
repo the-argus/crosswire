@@ -1,4 +1,5 @@
 #include "physics.hpp"
+#include "game_ids.hpp"
 #include "thelib/body.hpp"
 #include "thelib/opt.hpp"
 #include "thelib/shape.hpp"
@@ -69,6 +70,25 @@ void debug_draw_all_shapes() noexcept
     float hue = 0;
     constexpr float hue_increment = 10.0f;
 
+    auto color_for_type = [](game_id_e id) -> lib::opt_t<Color> {
+        switch (id) {
+        case cw::game_id_e::Player:
+            return ::GREEN;
+            break;
+        case cw::game_id_e::Bullet:
+            return ::RED;
+            break;
+        case cw::game_id_e::Terrain_Ditch:
+            return ::BROWN;
+            break;
+        case cw::game_id_e::Terrain_Obstacle:
+            return ::BLACK;
+            break;
+        default:
+            return {};
+        }
+    };
+
     for (lib::poly_shape_t &shape : poly_shapes.value()) {
         assert(shape.count() > 1);
         lib::vect_t verts[shape.count() + 1];
@@ -79,6 +99,14 @@ void debug_draw_all_shapes() noexcept
         verts[shape.count()] =
             shape.parent_cast()->body()->position() + shape.vertex(0);
         ::Color col = ColorFromHSV(hue, 1, 1);
+
+        auto id_res = get_physics_id(*shape.parent_cast());
+        if (id_res.okay()) {
+            if (auto color = color_for_type(id_res.release())) {
+                col = color.value();
+            }
+        }
+
         DrawLineStrip(verts, shape.count() + 1, col);
         hue += hue_increment;
         if (hue > 360.0f)
