@@ -1,4 +1,5 @@
 #include "physics.hpp"
+#include "game_ids.hpp"
 #include "thelib/body.hpp"
 #include "thelib/opt.hpp"
 #include "thelib/shape.hpp"
@@ -18,8 +19,8 @@ namespace cw::physics {
 void init() noexcept
 {
     space.emplace();
-    // space.value().set_collision_slop(0.1);
-    // space.value().set_iterations(10);
+    space.value().set_collision_slop(0);
+    space.value().set_iterations(3);
 
     // fix 50% of collision overlap per frame at 60hz
     space.value().set_collision_bias(powf(1.0 - 0.5, 60.0));
@@ -69,6 +70,25 @@ void debug_draw_all_shapes() noexcept
     float hue = 0;
     constexpr float hue_increment = 10.0f;
 
+    auto color_for_type = [](game_id_e id) -> lib::opt_t<Color> {
+        switch (id) {
+        case cw::game_id_e::Player:
+            return ::GREEN;
+            break;
+        case cw::game_id_e::Bullet:
+            return ::RED;
+            break;
+        case cw::game_id_e::Terrain_Ditch:
+            return ::BROWN;
+            break;
+        case cw::game_id_e::Terrain_Obstacle:
+            return ::BLACK;
+            break;
+        default:
+            return {};
+        }
+    };
+
     for (lib::poly_shape_t &shape : poly_shapes.value()) {
         assert(shape.count() > 1);
         lib::vect_t verts[shape.count() + 1];
@@ -79,6 +99,14 @@ void debug_draw_all_shapes() noexcept
         verts[shape.count()] =
             shape.parent_cast()->body()->position() + shape.vertex(0);
         ::Color col = ColorFromHSV(hue, 1, 1);
+
+        auto id_res = get_physics_id(*shape.parent_cast());
+        if (id_res.okay()) {
+            if (auto color = color_for_type(id_res.release())) {
+                col = color.value();
+            }
+        }
+
         DrawLineStrip(verts, shape.count() + 1, col);
         hue += hue_increment;
         if (hue > 360.0f)
@@ -87,6 +115,13 @@ void debug_draw_all_shapes() noexcept
 
     for (lib::segment_shape_t &shape : segment_shapes.value()) {
         ::Color col = ColorFromHSV(hue, 1, 1);
+
+        auto id_res = get_physics_id(*shape.parent_cast());
+        if (id_res.okay()) {
+            if (auto color = color_for_type(id_res.release())) {
+                col = color.value();
+            }
+        }
 
         DrawLineV(shape.parent_cast()->body()->position() + shape.a(),
                   shape.parent_cast()->body()->position() + shape.b(), col);
@@ -97,7 +132,8 @@ void debug_draw_all_shapes() noexcept
     }
 }
 
-raw_body_t create_body(const lib::body_t::body_options_t &options) noexcept
+raw_body_t create_body(game_id_e id,
+                       const lib::body_t::body_options_t &options) noexcept
 {
     auto stock_handle = bodies.value().alloc_new(options);
 
@@ -112,6 +148,8 @@ raw_body_t create_body(const lib::body_t::body_options_t &options) noexcept
     auto body_lookup = bodies.value().get(handle);
     lib::body_t &body = body_lookup.release();
     space.value().add(body);
+
+    set_physics_id(body, id);
 
     return handle;
 }
@@ -139,8 +177,8 @@ raw_segment_shape_t
 create_segment_shape(const raw_body_t &body_handle,
                      const lib::segment_shape_t::options_t &options) noexcept
 {
-    auto stock_handle =
-        segment_shapes.value().alloc_new(lookup_body(body_handle), options);
+    auto &body = lookup_body(body_handle);
+    auto stock_handle = segment_shapes.value().alloc_new(body, options);
 
     if (!stock_handle.okay()) [[unlikely]] {
         LN_FATAL_FMT("Failed to allocate physics body due to errcode {}",
@@ -153,13 +191,15 @@ create_segment_shape(const raw_body_t &body_handle,
     lib::segment_shape_t &shape = shape_lookup.release();
     space.value().add(*shape.parent_cast());
 
+    shape.parent_cast()->userData = body.userData;
+
     return handle;
 }
 
 auto poly_shape_impl = [](const raw_body_t &body_handle,
                           auto options) -> raw_poly_shape_t {
-    auto stock_handle =
-        poly_shapes.value().alloc_new(lookup_body(body_handle), options);
+    auto &body = lookup_body(body_handle);
+    auto stock_handle = poly_shapes.value().alloc_new(body, options);
 
     if (!stock_handle.okay()) [[unlikely]] {
         LN_FATAL_FMT("Failed to allocate physics body due to errcode {}",
@@ -171,6 +211,8 @@ auto poly_shape_impl = [](const raw_body_t &body_handle,
     auto shape_lookup = poly_shapes.value().get(handle);
     lib::poly_shape_t &shape = shape_lookup.release();
     space.value().add(*shape.parent_cast());
+
+    shape.parent_cast()->userData = body.userData;
 
     return handle;
 };

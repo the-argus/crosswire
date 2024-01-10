@@ -1,5 +1,6 @@
 #pragma once
 #include "allo/pool_allocator_generational.hpp"
+#include "game_ids.hpp"
 #include "root_allocator.hpp"
 #include "thelib/body.hpp"
 #include "thelib/shape.hpp"
@@ -76,7 +77,8 @@ void update(float timestep) noexcept;
 void add_collision_handler(const cpCollisionHandler &handler) noexcept;
 
 /// Create a physics body and return a handle to it.
-raw_body_t create_body(const lib::body_t::body_options_t &options) noexcept;
+raw_body_t create_body(game_id_e id,
+                       const lib::body_t::body_options_t &options) noexcept;
 
 // clang-format off
 /// Create a segment (line) shape attached to a body
@@ -176,8 +178,10 @@ requires(std::is_same_v<T, lib::segment_shape_t> ||
     }
 
     /// Constructor for physics body
-    inline owning_handle_t(const lib::body_t::body_options_t &options) noexcept
-        requires std::is_same_v<T, lib::body_t> : inner(create_body(options))
+    inline owning_handle_t(game_id_e id,
+                           const lib::body_t::body_options_t &options) noexcept
+        requires std::is_same_v<T, lib::body_t>
+        : inner(create_body(id, options))
     {
     }
 

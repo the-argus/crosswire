@@ -281,38 +281,37 @@ requires(
     // the pool allocator owns its allocation
     inline ~pool_allocator_generational_t() TESTING_NOEXCEPT
     {
-        std::array<uint8_t, 3> errcodes = {
-            std::underlying_type_t<interfaces::status_code_e>(
-                passed_options.allocator
-                    .free(passed_options.allocation_type, m_items_buffer.data(),
-                          m_items_buffer.size() *
-                              sizeof(typename decltype(m_items_buffer)::type))
-                    .status()),
-            std::underlying_type_t<interfaces::status_code_e>(
-                passed_options.allocator
-                    .free(
-                        passed_options.allocation_type,
-                        m_activity_buffer.data(),
-                        m_activity_buffer.size() *
-                            sizeof(typename decltype(m_activity_buffer)::type))
-                    .status()),
-            std::underlying_type_t<interfaces::status_code_e>(
-                passed_options.allocator
-                    .free(passed_options.allocation_type,
-                          m_generation_buffer.data(),
-                          m_generation_buffer.size() *
-                              sizeof(
-                                  typename decltype(m_generation_buffer)::type))
-                    .status()),
+        for (int i = 0; i < m_end_guess; ++i) {
+            if (m_activity_buffer.data()[i])
+                m_items_buffer.data()[i].data.~T();
+        }
+
+        std::array<lib::status_t<interfaces::status_code_e>, 3> errcodes = {
+            passed_options.allocator
+                .free(passed_options.allocation_type, m_items_buffer.data(),
+                      m_items_buffer.size() *
+                          sizeof(typename decltype(m_items_buffer)::type))
+                .status(),
+            passed_options.allocator
+                .free(passed_options.allocation_type, m_activity_buffer.data(),
+                      m_activity_buffer.size() *
+                          sizeof(typename decltype(m_activity_buffer)::type))
+                .status(),
+            passed_options.allocator
+                .free(passed_options.allocation_type,
+                      m_generation_buffer.data(),
+                      m_generation_buffer.size() *
+                          sizeof(typename decltype(m_generation_buffer)::type))
+                .status(),
         };
         if constexpr (logging) {
             uint8_t index = 0;
             for (auto code : errcodes) {
-                if (code != 0) [[unlikely]] {
+                if (!code.okay()) [[unlikely]] {
                     LN_ERROR_FMT(
                         "Attempted to free pool allocator on destruction, "
                         "but got error code {} for buffer index {}",
-                        code, index);
+                        fmt::underlying(code.status()), index);
                 }
                 ++index;
             }

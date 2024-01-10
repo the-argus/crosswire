@@ -69,7 +69,8 @@ const cpp_sources = &[_][]const u8{
     "src/globals.cpp",
     "src/input.cpp",
     "src/physics.cpp",
-    "src/player.cpp"
+    "src/player.cpp",
+    "src/terrain.cpp",
 };
 
 const include_dirs = &[_][]const u8{
