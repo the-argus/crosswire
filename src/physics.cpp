@@ -20,7 +20,7 @@ void init() noexcept
 {
     space.emplace();
     // space.value().set_collision_slop(0.1);
-    // space.value().set_iterations(10);
+    space.value().set_iterations(3);
 
     // fix 50% of collision overlap per frame at 60hz
     space.value().set_collision_bias(powf(1.0 - 0.5, 60.0));
