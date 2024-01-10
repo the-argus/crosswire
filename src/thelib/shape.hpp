@@ -16,6 +16,11 @@ class shape_t : public ::cpShape
     // youre not inteded to make one of these, its abstract
     shape_t() = delete;
 
+    inline constexpr shape_t(const cpShape &original) TESTING_NOEXCEPT
+        : ::cpShape(original)
+    {
+    }
+
     [[nodiscard]] float friction() TESTING_NOEXCEPT;
     void set_friction(float friction) TESTING_NOEXCEPT;
     [[nodiscard]] bool sensor() TESTING_NOEXCEPT;
@@ -80,6 +85,11 @@ class poly_shape_t : public ::cpPolyShape
         float radius;
     };
 
+    inline constexpr poly_shape_t(const cpPolyShape &original) TESTING_NOEXCEPT
+        : ::cpPolyShape(original)
+    {
+    }
+
     poly_shape_t(lib::body_t &body,
                  const default_options_t &options) TESTING_NOEXCEPT;
 
@@ -105,6 +115,11 @@ class segment_shape_t : public ::cpSegmentShape
 {
   public:
     segment_shape_t() = delete;
+
+    inline constexpr segment_shape_t(const cpSegmentShape &original)
+        TESTING_NOEXCEPT : ::cpSegmentShape(original)
+    {
+    }
 
     struct options_t
     {
