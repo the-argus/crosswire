@@ -83,7 +83,13 @@ void player_t::update()
 
 void player_t::collision_handler_static(cpArbiter *arb, cpSpace *space, cpDataPointer userData) {
     // If colliding with a body whose ID is build_site and player presses a button and that build site is not attached to wire
-    if (get_physics_id((lib::body_t)*arb->body_b) == game_id_e::Build_Site) {
+    if (
+        get_physics_id(*arb->body_b).okay() && 
+        get_physics_id(*arb->body_b).release() == game_id_e::Build_Site && 
+        IsKeyDown(KEY_SPACE)
+        
+    ) {
+
     }
         // If player is not holding wire
         // attach wire to that build site
