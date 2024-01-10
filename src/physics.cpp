@@ -19,7 +19,7 @@ namespace cw::physics {
 void init() noexcept
 {
     space.emplace();
-    // space.value().set_collision_slop(0.1);
+    space.value().set_collision_slop(0);
     space.value().set_iterations(3);
 
     // fix 50% of collision overlap per frame at 60hz
