@@ -281,6 +281,11 @@ requires(
     // the pool allocator owns its allocation
     inline ~pool_allocator_generational_t() TESTING_NOEXCEPT
     {
+        for (int i = 0; i < m_end_guess; ++i) {
+            if (m_activity_buffer.data()[i])
+                m_items_buffer.data()[i].data.~T();
+        }
+
         std::array<lib::status_t<interfaces::status_code_e>, 3> errcodes = {
             passed_options.allocator
                 .free(passed_options.allocation_type, m_items_buffer.data(),
