@@ -18,7 +18,7 @@ inline void load_debug_level()
     std::array shape_3 = {
         lib::vect_t{-10, 10},
         lib::vect_t{0, 15},
-        lib::vect_t{-10, 0},
+        lib::vect_t{10, 0},
         lib::vect_t{-5, -5},
     };
     std::array shape_4 = {
