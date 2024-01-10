@@ -99,7 +99,7 @@ get_id(void *data) noexcept
     struct bit_field_t
     {
         size_t magic : 56;
-        uint8_t identifier : 8;
+        size_t identifier : 8;
     };
     static_assert(sizeof(bit_field_t) == sizeof(data));
     static_assert(alignof(bit_field_t) == alignof(decltype(data)));
@@ -127,8 +127,10 @@ requires(
     struct bit_field_t
     {
         size_t magic : 56;
-        uint8_t identifier : 8;
+        size_t identifier : 8;
     };
+    static_assert(sizeof(bit_field_t) == sizeof(object.userData));
+    static_assert(alignof(bit_field_t) == alignof(decltype(object.userData)));
 
     auto *data = reinterpret_cast<bit_field_t *>(&object.userData);
     data->magic = 0;
