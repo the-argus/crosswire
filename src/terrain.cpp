@@ -50,7 +50,7 @@ void load_polygon(game_id_e terrain_id,
 
     assert(terrain_id > game_id_e::INVALID_SECT_2_BEGIN);
     uint8_t index =
-        uint8_t(terrain_id) - uint8_t(game_id_e::INVALID_SECT_2_BEGIN);
+        uint8_t(terrain_id) - uint8_t(game_id_e::INVALID_SECT_2_BEGIN) - 1;
 
     auto body = static_body_by_id.value()[index];
 
