@@ -9,6 +9,7 @@
 #include "physics.hpp"
 #include "player.hpp"
 #include "render_pipeline.hpp"
+#include "resources.hpp"
 #include "terrain.hpp"
 #include "thelib/opt.hpp"
 #include <raylib.h>
@@ -34,12 +35,14 @@ int main()
     render_pipeline::init();
     physics::init();
     terrain::init();
+    resources::load();
 
     // wait to initialize player until after physics
     my_player.emplace();
 
     set_main_camera(Camera2D{
-        .offset = {GAME_WIDTH/2, GAME_HEIGHT/2}, // Camera offset (displacement from target)
+        // Camera offset (displacement from target)
+        .offset = {GAME_WIDTH / 2.0f, GAME_HEIGHT / 2.0f},
         .target = {0, 0}, // Camera target (rotation and zoom origin)
         .rotation = 0,    // Camera rotation in degrees
         .zoom = 1,        // Camera zoom (scaling), should be 1.0f by default
@@ -61,6 +64,7 @@ int main()
     // destroy player before cleaning up physics. not necessary but cool!!!!!
     my_player.reset();
     physics::cleanup();
+    resources::cleanup();
 
     return 0;
 }
