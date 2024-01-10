@@ -112,4 +112,13 @@ cpSimpleMotor *body_t::connect_with_simple_motor(
 
     return motor;
 }
+
+[[nodiscard]] cpDataPointer body_t::user_data() const TESTING_NOEXCEPT
+{
+    return userData;
+}
+void body_t::set_user_data(cpDataPointer data) TESTING_NOEXCEPT
+{
+    userData = data;
+}
 } // namespace lib
