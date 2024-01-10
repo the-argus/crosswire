@@ -3,6 +3,7 @@
 #include "game_ids.hpp"
 #include "root_allocator.hpp"
 #include "thelib/body.hpp"
+#include "thelib/opt.hpp"
 #include "thelib/shape.hpp"
 #include <cstddef>
 
@@ -90,6 +91,16 @@ raw_poly_shape_t create_box_shape(const raw_body_t &body_handle, const lib::poly
 /// Create a polygon shape attached to a body
 raw_poly_shape_t create_polygon_shape(const raw_body_t &body_handle, const lib::poly_shape_t::default_options_t &options) noexcept;
 // clang-format on
+
+/// Alternative to set_physics_id which is slower but lets you also pass in a
+/// pointer to something.
+void set_user_data_and_id(raw_body_t handle, game_id_e id, void *data) noexcept;
+/// returns the ID of the object, unless it was not set with set_physics_id() or
+/// physics::set_user_data_and_id().
+lib::opt_t<game_id_e> get_id(raw_body_t handle) noexcept;
+/// returns the ID of the object, unless it was not set with
+/// physics::set_user_data_and_id(). guaranteed to not return a null pointer.
+lib::opt_t<void *> get_user_data(raw_body_t handle) noexcept;
 
 void delete_segment_shape(raw_segment_shape_t) noexcept;
 void delete_polygon_shape(raw_poly_shape_t) noexcept;

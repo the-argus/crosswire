@@ -9,10 +9,37 @@
 /// Number of physics bodies that we reserve space for at the start
 constexpr size_t initial_reservation = 512;
 
+struct physics_user_data_t
+{
+    cw::game_id_e id;
+    void *user_data;
+};
+
+using user_data_allocator =
+    allo::pool_allocator_generational_t<physics_user_data_t,
+                                        cw::physics::physics_memory_options,
+                                        uint32_t, uint32_t>;
+
+/// We cast some void* to this in order to get the user data handle out of the
+/// EIGHT bytes that chipmunk gives us
+struct unsafe_user_data_handle_t
+{
+    uint32_t index;
+    uint32_t generation;
+};
+
+static_assert(sizeof(user_data_allocator::handle_t) ==
+              sizeof(unsafe_user_data_handle_t));
+static_assert(sizeof(unsafe_user_data_handle_t) == sizeof(cpDataPointer));
+static_assert(alignof(user_data_allocator::handle_t) ==
+              alignof(unsafe_user_data_handle_t));
+static_assert(alignof(unsafe_user_data_handle_t) < alignof(cpDataPointer));
+
 static lib::opt_t<cw::physics::poly_shape_allocator> poly_shapes;
 static lib::opt_t<cw::physics::segment_shape_allocator> segment_shapes;
 static lib::opt_t<cw::physics::body_allocator> bodies;
 static lib::opt_t<lib::space_t> space;
+static lib::opt_t<user_data_allocator> user_data;
 
 namespace cw::physics {
 /// Initialize physics related resources
@@ -27,6 +54,7 @@ void init() noexcept
     poly_shapes.emplace(initial_reservation);
     segment_shapes.emplace(initial_reservation);
     bodies.emplace(initial_reservation);
+    user_data.emplace(initial_reservation);
 }
 
 /// Delete all physics data
@@ -48,7 +76,84 @@ void cleanup() noexcept
     poly_shapes.reset();
     segment_shapes.reset();
     bodies.reset();
+    user_data.reset();
     space.reset();
+}
+
+void set_user_data_and_id(raw_body_t handle, game_id_e id, void *data) noexcept
+{
+    if (!user_data.has_value()) [[unlikely]] {
+        LN_FATAL("attempt to set user data of physics body before physics "
+                 "module was initialized");
+        std::abort();
+    }
+
+    auto &body = get_body(handle);
+
+    auto new_user_data = user_data.value().alloc_new(physics_user_data_t{
+        .id = id,
+        .user_data = data,
+    });
+
+    if (!new_user_data.okay()) [[unlikely]] {
+        LN_FATAL("Failed to allocate user data for physics object");
+        std::abort();
+    }
+    auto actual_new_user_data = new_user_data.release();
+
+    // HACK: this is a hack and sucks!!!!
+    // WARNING: this sucks!!!!
+    // BUG: SHIT
+    auto unsafe_data =
+        *reinterpret_cast<unsafe_user_data_handle_t *>(&actual_new_user_data);
+
+    body.set_user_data(*reinterpret_cast<void **>(&unsafe_data));
+}
+
+lib::opt_t<game_id_e> get_id(raw_body_t handle) noexcept
+{
+    auto &body = get_body(handle);
+
+    auto res = get_physics_id(body);
+    if (res.okay()) {
+        return res.release();
+    } else if (res.status() == decltype(res)::err_type::Null) {
+        return {};
+    }
+
+    auto user_data_handle =
+        *reinterpret_cast<user_data_allocator::handle_t *>(&body.userData);
+    auto maybe_user_data = user_data.value().get(user_data_handle);
+    if (maybe_user_data.okay()) {
+        return maybe_user_data.release().id;
+    } else {
+        LN_ERROR("Bad cast occurred in physics::get_id for body_t. Indicates "
+                 "that the implementation of get_physics_id is unreliable.");
+        return {};
+    }
+}
+
+lib::opt_t<void *> get_user_data(raw_body_t handle) noexcept
+{
+    auto &body = get_body(handle);
+    {
+        auto res = get_physics_id(body);
+        if (res.status() == decltype(res)::err_type::Null || res.okay()) {
+            return {};
+        }
+    }
+
+    auto user_data_handle =
+        *reinterpret_cast<user_data_allocator::handle_t *>(&body.userData);
+    auto maybe_user_data = user_data.value().get(user_data_handle);
+    if (maybe_user_data.okay()) {
+        return maybe_user_data.release().user_data;
+    } else {
+        LN_ERROR(
+            "Bad cast occurred in physics::get_user_data for body_t. Indicates "
+            "that the implementation of get_physics_id is unreliable.");
+        return {};
+    }
 }
 
 void add_collision_handler(const cpCollisionHandler &handler) noexcept
@@ -311,7 +416,9 @@ void delete_body(raw_body_t handle) noexcept
         return;
     }
 
-    space.value().remove(maybe_body.release());
+    auto &body = maybe_body.release();
+
+    space.value().remove(body);
 
     auto status = bodies.value().free(handle);
     if (!status.okay()) [[unlikely]] {
