@@ -11,16 +11,20 @@ namespace cw {
 /// physics objects to tell what type of object they belong to.
 enum class game_id_e : uint8_t
 {
+    // TODO: make these only go up to 128 bits and then have two separate enums,
+    // one for terrain and one for regular stuff
     NULLP = 0, // --------------------------------------------------------------
     Player,
     Bullet,
     INVALID_SECT_1_END, // -----------------------------------------------------
 
+    // clang-format off
     INVALID_SECT_2_BEGIN = 128, // ---------------------------------------------
     // terrain where you can't place wire pivots
     Terrain_Ditch,
     // terrain where you can't place wire pivots AND wire cannot pass through
     Terrain_Obstacle,
+    // clang-format on
 
     INVALID_MAX, // ------------------------------------------------------------
 };

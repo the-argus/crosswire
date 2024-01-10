@@ -18,7 +18,7 @@ void init()
 {
     constexpr auto static_body_options = lib::body_t::body_options_t{
         .type = lib::body_t::Type::STATIC,
-        .mass = INFINITY,
+        .mass = 1,
         .moment = INFINITY,
     };
 
