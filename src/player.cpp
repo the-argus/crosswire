@@ -1,4 +1,5 @@
 #include "player.hpp"
+#include "game_ids.hpp"
 #include "globals.hpp"
 #include "physics.hpp"
 #include "thelib/rect.hpp"
@@ -19,6 +20,16 @@ player_t::player_t()
                     .radius = 1,
                 }))
 {
+    // add a collision handler to keep track of when player is colliding with a static body
+    physics::add_collision_handler({
+        .typeA = CP_BODY_TYPE_DYNAMIC,
+        .typeB = CP_BODY_TYPE_STATIC,
+        .beginFunc = nullptr,
+        .preSolveFunc = nullptr,
+        .postSolveFunc = collision_handler_static,
+        .separateFunc = nullptr,
+        .userData = nullptr
+    });
 }
 
 void player_t::draw()
@@ -69,4 +80,16 @@ void player_t::update()
     camera_player.target.y +=
         (pos.y - camera_player.target.y) / cam_followspeed;
 }
-} // namespace cw
+
+void player_t::collision_handler_static(cpArbiter *arb, cpSpace *space, cpDataPointer userData) {
+    // If colliding with a body whose ID is build_site and player presses a button and that build site is not attached to wire
+    if (get_physics_id((lib::body_t)*arb->body_b) == game_id_e::Build_Site) {
+    }
+        // If player is not holding wire
+        // attach wire to that build site
+        // the player will now be holding their wire which is connected to the build site
+
+        // If  and player is holding wire and the wire is not tangled
+        // both build sites the wire connects to shall be marked as complete
+}
+}
