@@ -63,6 +63,7 @@ int main()
 
     // destroy player before cleaning up physics. not necessary but cool!!!!!
     my_player.reset();
+    terrain::cleanup();
     physics::cleanup();
     resources::cleanup();
 
