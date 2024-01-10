@@ -69,10 +69,10 @@ void cleanup() noexcept
     // for (lib::poly_shape_t &shape : poly_shapes.value()) {
     //     space.value().remove(*shape.parent_cast());
     // }
+    // for (lib::segment_shape_t &shape : segment_shapes.value()) {
+    //     space.value().remove(*shape.parent_cast());
+    // }
 
-    for (lib::segment_shape_t &shape : segment_shapes.value()) {
-        space.value().remove(*shape.parent_cast());
-    }
     poly_shapes.reset();
     segment_shapes.reset();
     bodies.reset();
@@ -112,8 +112,16 @@ void set_user_data_and_id(raw_body_t handle, game_id_e id, void *data) noexcept
 
 lib::opt_t<game_id_e> get_id(raw_body_t handle) noexcept
 {
-    auto &body = get_body(handle);
+    return get_id(get_body(handle));
+}
 
+lib::opt_t<void *> get_user_data(const raw_body_t handle) noexcept
+{
+    return get_user_data(get_body(handle));
+}
+
+lib::opt_t<game_id_e> get_id(const lib::body_t &body) noexcept
+{
     auto res = get_physics_id(body);
     if (res.okay()) {
         return res.release();
@@ -122,7 +130,8 @@ lib::opt_t<game_id_e> get_id(raw_body_t handle) noexcept
     }
 
     auto user_data_handle =
-        *reinterpret_cast<user_data_allocator::handle_t *>(&body.userData);
+        *reinterpret_cast<const user_data_allocator::handle_t *>(
+            &body.userData);
     auto maybe_user_data = user_data.value().get(user_data_handle);
     if (maybe_user_data.okay()) {
         return maybe_user_data.release().id;
@@ -133,9 +142,8 @@ lib::opt_t<game_id_e> get_id(raw_body_t handle) noexcept
     }
 }
 
-lib::opt_t<void *> get_user_data(raw_body_t handle) noexcept
+lib::opt_t<void *> get_user_data(const lib::body_t &body) noexcept
 {
-    auto &body = get_body(handle);
     {
         auto res = get_physics_id(body);
         if (res.status() == decltype(res)::err_type::Null || res.okay()) {
@@ -144,7 +152,8 @@ lib::opt_t<void *> get_user_data(raw_body_t handle) noexcept
     }
 
     auto user_data_handle =
-        *reinterpret_cast<user_data_allocator::handle_t *>(&body.userData);
+        *reinterpret_cast<const user_data_allocator::handle_t *>(
+            &body.userData);
     auto maybe_user_data = user_data.value().get(user_data_handle);
     if (maybe_user_data.okay()) {
         return maybe_user_data.release().user_data;
@@ -155,6 +164,8 @@ lib::opt_t<void *> get_user_data(raw_body_t handle) noexcept
         return {};
     }
 }
+
+raw_body_t get_handle_from_body(const lib::body_t &) noexcept;
 
 void add_collision_handler(const cpCollisionHandler &handler) noexcept
 {

@@ -98,15 +98,20 @@ void set_user_data_and_id(raw_body_t handle, game_id_e id, void *data) noexcept;
 /// returns the ID of the object, unless it was not set with set_physics_id() or
 /// physics::set_user_data_and_id().
 lib::opt_t<game_id_e> get_id(raw_body_t handle) noexcept;
+lib::opt_t<game_id_e> get_id(const lib::body_t &body) noexcept;
 /// returns the ID of the object, unless it was not set with
 /// physics::set_user_data_and_id(). guaranteed to not return a null pointer.
 lib::opt_t<void *> get_user_data(raw_body_t handle) noexcept;
+lib::opt_t<void *> get_user_data(const lib::body_t &body) noexcept;
 
 void delete_segment_shape(raw_segment_shape_t) noexcept;
 void delete_polygon_shape(raw_poly_shape_t) noexcept;
 void delete_body(raw_body_t) noexcept;
 
 void debug_draw_all_shapes() noexcept;
+
+// TODO: implement this for shapes
+raw_body_t get_handle_from_body(const lib::body_t &) noexcept;
 
 lib::body_t &get_body(raw_body_t) noexcept;
 lib::segment_shape_t &get_segment_shape(raw_segment_shape_t) noexcept;
