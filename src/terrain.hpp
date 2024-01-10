@@ -1,13 +1,14 @@
 #pragma once
 
 #include "game_ids.hpp"
-#include "thelib/shape.hpp"
+#include "thelib/slice.hpp"
+#include "thelib/vect.hpp"
 
 namespace cw::terrain {
 void init();
 
 void load_polygon(game_id_e terrain_id,
-                  const lib::poly_shape_t::default_options_t &options);
+                  lib::slice_t<const lib::vect_t> &vertices);
 
 /// Delete all terrain sprites and physics objects
 void clear_level();

@@ -6,9 +6,10 @@
 
 /// How many shapes we'll be able to hold without reallocating
 constexpr size_t initial_reservation = 256;
+constexpr float smoothing_radius = 2.0f;
 
-static lib::opt_t<
-    std::array<std::vector<cw::physics::raw_poly_shape_t>, cw::num_terrain_ids>>
+static lib::opt_t<std::array<std::vector<cw::physics::raw_segment_shape_t>,
+                             cw::num_terrain_ids>>
     shapes_by_id;
 
 namespace cw::terrain {
@@ -22,29 +23,65 @@ void init()
 
     // reserve some
     shapes_by_id.emplace();
-    for (std::vector<physics::raw_poly_shape_t> vec : shapes_by_id.value()) {
+    for (std::vector<physics::raw_segment_shape_t> vec : shapes_by_id.value()) {
         vec.reserve(initial_reservation);
     }
 }
 
-void load_polygon(game_id_e terrain_id,
-                  const lib::poly_shape_t::default_options_t &options)
+void load_polygon(const game_id_e terrain_id,
+                  lib::slice_t<const lib::vect_t> &vertices)
 {
     if (!shapes_by_id.has_value()) {
-        LN_WARN("Attempt to create a terrain polygon, but the terrain module "
-                "has not been initialized.");
+        LN_ERROR("Attempt to create a terrain polygon, but the terrain module "
+                 "has not been initialized.");
+        return;
+    }
+
+    if (vertices.size() < 2) {
+        LN_ERROR("Called terrain::load_polygon, but provided less than two "
+                 "vertices. Unable to create a collision shape.");
         return;
     }
 
     assert(terrain_id > game_id_e::INVALID_SECT_2_BEGIN);
-    uint8_t index =
+    const uint8_t index =
         uint8_t(terrain_id) - uint8_t(game_id_e::INVALID_SECT_2_BEGIN) - 1;
 
-    auto shape =
-        physics::create_polygon_shape(physics::get_static_body(), options);
-    shapes_by_id.value()[index].push_back(shape);
-    set_physics_id(*physics::get_polygon_shape(shape).parent_cast(),
-                   terrain_id);
+    auto mksegment = [index,
+                      terrain_id](lib::segment_shape_t::options_t options) {
+        auto shape =
+            physics::create_segment_shape(physics::get_static_body(), options);
+        shapes_by_id.value()[index].push_back(shape);
+        set_physics_id(*physics::get_segment_shape(shape).parent_cast(),
+                       terrain_id);
+    };
+
+    if (vertices.size() == 2) {
+        mksegment({
+            .a = vertices.data()[0],
+            .b = vertices.data()[1],
+        });
+        return;
+    }
+
+    size_t i = 0;
+    for (const auto &vect : vertices) {
+        if (i + 1 == vertices.size()) {
+            break;
+        }
+        lib::segment_shape_t::options_t options{
+            .a = vect,
+            .b = vertices.data()[i + 1],
+            .radius = smoothing_radius,
+        };
+        mksegment(options);
+        ++i;
+    }
+
+    mksegment({
+        .a = vertices.data()[vertices.size() - 1],
+        .b = vertices.data()[0],
+    });
 }
 
 void clear_level()
@@ -57,7 +94,7 @@ void clear_level()
 
     for (const auto &vec : shapes_by_id.value()) {
         for (const auto &shape : vec) {
-            physics::delete_polygon_shape(shape);
+            physics::delete_segment_shape(shape);
         }
     }
 }

@@ -116,6 +116,13 @@ void debug_draw_all_shapes() noexcept
     for (lib::segment_shape_t &shape : segment_shapes.value()) {
         ::Color col = ColorFromHSV(hue, 1, 1);
 
+        auto id_res = get_physics_id(*shape.parent_cast());
+        if (id_res.okay()) {
+            if (auto color = color_for_type(id_res.release())) {
+                col = color.value();
+            }
+        }
+
         DrawLineV(shape.parent_cast()->body()->position() + shape.a(),
                   shape.parent_cast()->body()->position() + shape.b(), col);
 

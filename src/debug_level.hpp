@@ -25,12 +25,17 @@ inline void load_debug_level()
         lib::vect_t{5, 0},  lib::vect_t{0, -5}, lib::vect_t{-5, 0},
         lib::vect_t{-3, 6}, lib::vect_t{0, 3},
     };
+    std::array shape_5 = {
+        lib::vect_t{5, 0},
+        lib::vect_t{0, -5},
+    };
 
-    std::array<lib::slice_t<const lib::vect_t>, 4> shapes = {
+    std::array<lib::slice_t<const lib::vect_t>, 5> shapes = {
         shape_1,
         shape_2,
         shape_3,
         shape_4,
+        shape_5,
     };
 
     std::array<lib::vect_t, 10> vecbuf;
@@ -53,10 +58,8 @@ inline void load_debug_level()
             vert += position;
         }
 
-        cw::terrain::load_polygon(id, {
-                                          .vertices = slice,
-                                          .radius = 1,
-                                      });
+        lib::slice_t<const lib::vect_t> constslice = slice;
+        cw::terrain::load_polygon(id, constslice);
     };
 
     for (auto &shape : shapes) {
