@@ -15,6 +15,7 @@ const release_flags = &[_][]const u8{
     "-DTHELIB_RESULT_T_LOGGING",
     "-DTHELIB_SLICE_T_LOGGING",
     "-DTHELIB_ONE_OF_T_LOGGING",
+    "-DALLO_STACK_ALLOCATOR_USE_CTTI",
 };
 const debug_flags = &[_][]const u8{
     "-g",
@@ -34,6 +35,7 @@ const debug_flags = &[_][]const u8{
     "-DTHELIB_RESULT_T_LOGGING",
     "-DTHELIB_SLICE_T_LOGGING",
     "-DTHELIB_ONE_OF_T_LOGGING",
+    "-DALLO_STACK_ALLOCATOR_USE_CTTI",
 };
 
 const testing_flags = &[_][]const u8{
@@ -50,7 +52,7 @@ const non_testing_flags = &[_][]const u8{
     "-DTESTING_NOEXCEPT=noexcept",
     "-DFMT_EXCEPTIONS=0",
     "-fno-exceptions",
-    // "-fno-rtti",
+    "-fno-rtti",
 };
 
 const zcc = @import("compile_commands");
