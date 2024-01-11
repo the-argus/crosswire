@@ -80,15 +80,14 @@ void cleanup() noexcept
     space.reset();
 }
 
-void set_user_data_and_id(raw_body_t handle, game_id_e id, void *data) noexcept
+template <typename T>
+void generic_set_user_data_and_id(T &object, game_id_e id, void *data) noexcept
 {
     if (!user_data.has_value()) [[unlikely]] {
         LN_FATAL("attempt to set user data of physics body before physics "
                  "module was initialized");
         std::abort();
     }
-
-    auto &body = get_body(handle);
 
     auto new_user_data = user_data.value().alloc_new(physics_user_data_t{
         .id = id,
@@ -107,7 +106,53 @@ void set_user_data_and_id(raw_body_t handle, game_id_e id, void *data) noexcept
     auto unsafe_data =
         *reinterpret_cast<unsafe_user_data_handle_t *>(&actual_new_user_data);
 
-    body.set_user_data(*reinterpret_cast<void **>(&unsafe_data));
+    object.set_user_data(*reinterpret_cast<void **>(&unsafe_data));
+}
+
+void set_user_data_and_id(raw_body_t handle, game_id_e id, void *data) noexcept
+{
+    generic_set_user_data_and_id(get_body(handle), id, data);
+}
+
+void set_user_data_and_id(raw_poly_shape_t handle, game_id_e id,
+                          void *data) noexcept
+{
+    generic_set_user_data_and_id(*get_polygon_shape(handle).parent_cast(), id,
+                                 data);
+}
+
+void set_user_data_and_id(raw_segment_shape_t handle, game_id_e id,
+                          void *data) noexcept
+{
+    generic_set_user_data_and_id(*get_segment_shape(handle).parent_cast(), id,
+                                 data);
+}
+
+template <typename T>
+requires(
+    std::is_same_v<T, lib::shape_t> ||
+    std::is_same_v<
+        T, lib::body_t>) auto generic_get_user_data(const T &object) noexcept
+    -> lib::opt_t<void *>
+{
+    {
+        auto res = get_physics_id(object);
+        if (res.status() == decltype(res)::err_type::Null || res.okay()) {
+            return {};
+        }
+    }
+
+    auto user_data_handle =
+        *reinterpret_cast<const user_data_allocator::handle_t *>(
+            &object.userData);
+    auto maybe_user_data = user_data.value().get(user_data_handle);
+    if (maybe_user_data.okay()) {
+        return maybe_user_data.release().user_data;
+    } else {
+        LN_ERROR("Bad cast occurred in physics::get_user_data. Indicates "
+                 "that the implementation of get_physics_id is unreliable.");
+        return {};
+    }
 }
 
 lib::opt_t<game_id_e> get_id(raw_body_t handle) noexcept
@@ -117,12 +162,30 @@ lib::opt_t<game_id_e> get_id(raw_body_t handle) noexcept
 
 lib::opt_t<void *> get_user_data(const raw_body_t handle) noexcept
 {
-    return get_user_data(get_body(handle));
+    return generic_get_user_data(get_body(handle));
 }
 
-lib::opt_t<game_id_e> get_id(const lib::body_t &body) noexcept
+lib::opt_t<void *> get_user_data(const lib::body_t &body) noexcept
 {
-    auto res = get_physics_id(body);
+    return generic_get_user_data(body);
+}
+
+lib::opt_t<void *> get_user_data(raw_poly_shape_t handle) noexcept
+{
+    return generic_get_user_data(*get_polygon_shape(handle).parent_cast());
+}
+lib::opt_t<void *> get_user_data(raw_segment_shape_t handle) noexcept
+{
+    return generic_get_user_data(*get_segment_shape(handle).parent_cast());
+}
+
+lib::opt_t<void *> get_user_data(const lib::shape_t &shape) noexcept
+{
+    return generic_get_user_data(shape);
+}
+
+auto generic_get_id = [](auto object) -> lib::opt_t<game_id_e> {
+    auto res = get_physics_id(object);
     if (res.okay()) {
         return res.release();
     } else if (res.status() == decltype(res)::err_type::Null) {
@@ -131,38 +194,36 @@ lib::opt_t<game_id_e> get_id(const lib::body_t &body) noexcept
 
     auto user_data_handle =
         *reinterpret_cast<const user_data_allocator::handle_t *>(
-            &body.userData);
+            &object.userData);
     auto maybe_user_data = user_data.value().get(user_data_handle);
     if (maybe_user_data.okay()) {
         return maybe_user_data.release().id;
     } else {
-        LN_ERROR("Bad cast occurred in physics::get_id for body_t. Indicates "
-                 "that the implementation of get_physics_id is unreliable.");
+        LN_ERROR_FMT("Bad cast occurred in physics::get_id for {}. Indicates "
+                     "that the implementation of get_physics_id is unreliable.",
+                     typeid(decltype(object)).name());
         return {};
     }
+};
+
+lib::opt_t<game_id_e> get_id(const lib::body_t &body) noexcept
+{
+    return generic_get_id(body);
 }
 
-lib::opt_t<void *> get_user_data(const lib::body_t &body) noexcept
+lib::opt_t<game_id_e> get_id(raw_segment_shape_t handle) noexcept
 {
-    {
-        auto res = get_physics_id(body);
-        if (res.status() == decltype(res)::err_type::Null || res.okay()) {
-            return {};
-        }
-    }
+    return generic_get_id(*get_segment_shape(handle).parent_cast());
+}
 
-    auto user_data_handle =
-        *reinterpret_cast<const user_data_allocator::handle_t *>(
-            &body.userData);
-    auto maybe_user_data = user_data.value().get(user_data_handle);
-    if (maybe_user_data.okay()) {
-        return maybe_user_data.release().user_data;
-    } else {
-        LN_ERROR(
-            "Bad cast occurred in physics::get_user_data for body_t. Indicates "
-            "that the implementation of get_physics_id is unreliable.");
-        return {};
-    }
+lib::opt_t<game_id_e> get_id(raw_poly_shape_t handle) noexcept
+{
+    return generic_get_id(*get_polygon_shape(handle).parent_cast());
+}
+
+lib::opt_t<game_id_e> get_id(const lib::shape_t &shape) noexcept
+{
+    return generic_get_id(shape);
 }
 
 template <typename T> bool errhandle(typename T::get_handle_err_code_e errcode)
