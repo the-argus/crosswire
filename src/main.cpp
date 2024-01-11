@@ -58,6 +58,7 @@ int main()
             update();
         }
 #endif
+        resources::cleanup();
         CloseWindow();
     }
 
@@ -65,7 +66,6 @@ int main()
     my_player.reset();
     terrain::cleanup();
     physics::cleanup();
-    resources::cleanup();
 
     return 0;
 }
