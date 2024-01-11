@@ -9,7 +9,7 @@ struct player_t
     void draw();
     void update();
 
-    player_t();
+    player_t() noexcept;
 
   private:
     static constexpr float speed = 100;
