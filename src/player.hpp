@@ -1,6 +1,8 @@
 #pragma once
 #include "physics.hpp"
+#include "wire.hpp"
 #include <raylib.h>
+#include <stdint.h>
 
 namespace cw {
 
@@ -20,5 +22,7 @@ struct player_t {
         physics::raw_body_t body;
         physics::raw_poly_shape_t shape;
         bool holding_wire = false;
+        uint8_t toolCount = 5;
+        wire_t wire = wire_t(this);
 };
 } // namespace cw

@@ -32,6 +32,8 @@ player_t::player_t()
         .separateFunc = nullptr,
         .userData = this
     });
+
+    set_physics_id(physics::get_body(body), game_id_e::Player);
 }
 player_t::~player_t() {
     physics::delete_body(body);
@@ -88,27 +90,34 @@ void player_t::update()
 }
 
 void player_t::collision_handler_static(cpArbiter *arb, cpSpace *space, cpDataPointer userData) {
-    // If colliding with a body whose ID is build_site and player presses a button and that build site is not attached to wire
+    // Player collisions
     if (
-        physics::get_id(physics::get_handle_from_body(*arb->body_b)).has_value() && 
-        physics::get_id(physics::get_handle_from_body(*arb->body_b)).value() == game_id_e::Build_Site && 
-        IsKeyDown(KEY_SPACE) &&
-        !((build_site_t*)(physics::get_user_data(physics::get_handle_from_body(*arb->body_b)).value()))->get_state()
+        physics::get_id(physics::get_handle_from_body(*arb->body_a)).has_value() && 
+        physics::get_id(physics::get_handle_from_body(*arb->body_a)).value() == game_id_e::Player
     ) {
+        // If colliding with a body whose ID is build_site and player presses a button and that build site is not attached to wire
+        if (
+            physics::get_id(physics::get_handle_from_body(*arb->body_b)).has_value() && 
+            physics::get_id(physics::get_handle_from_body(*arb->body_b)).value() == game_id_e::Build_Site && 
+            IsKeyDown(KEY_SPACE) &&
+            !((build_site_t*)(physics::get_user_data(physics::get_handle_from_body(*arb->body_b)).value()))->get_state()
+        ) {
 
-    
-        // If player is not holding wire
-        if (!((player_t*)(userData))->holding_wire) {
-            // attach wire to that build site
-            // the player will now be holding their wire which is connected to the build site
-        }
-        // If player is holding wire and the wire is not tangled
-        else if (true) {
-        // both build sites the wire connects to shall be marked as complete
+        
+            // If player is not holding wire
+            if (!((player_t*)(userData))->holding_wire) {
+                // attach wire to that build site
+                ((player_t*)(userData))->wire.start_wire(((build_site_t*)(physics::get_user_data(physics::get_handle_from_body(*arb->body_b)).value())));
+                // the player will now be holding their wire which is connected to the build site
+            }
+            // If player is holding wire and the wire is not tangled
+            else if (((player_t*)(userData))->wire.check_wire_validity()) {
+                // both build sites the wire connects to shall be marked as complete
+                ((player_t*)(userData))->wire.end_wire(((build_site_t*)(physics::get_user_data(physics::get_handle_from_body(*arb->body_b)).value())));
+            }
         }
     }
 }
-
 
 
 }
