@@ -107,13 +107,16 @@ void player_t::collision_handler_static(cpArbiter *arb, cpSpace *space, cpDataPo
             // If player is not holding wire
             if (!((player_t*)(userData))->holding_wire) {
                 // attach wire to that build site
-                ((player_t*)(userData))->wire.start_wire(((build_site_t*)(physics::get_user_data(physics::get_handle_from_body(*arb->body_b)).value())));
+                auto handle = physics::get_handle_from_body(*arb->body_b);
+                if (auto data = physics::get_user_data(handle)) {
+                    ((player_t*)(userData))->wire.start_wire((*(build_site_t*)(data.value())));
+                }
                 // the player will now be holding their wire which is connected to the build site
             }
             // If player is holding wire and the wire is not tangled
             else if (((player_t*)(userData))->wire.check_wire_validity()) {
                 // both build sites the wire connects to shall be marked as complete
-                ((player_t*)(userData))->wire.end_wire(((build_site_t*)(physics::get_user_data(physics::get_handle_from_body(*arb->body_b)).value())));
+                ((player_t*)(userData))->wire.end_wire((*(build_site_t*)(physics::get_user_data(physics::get_handle_from_body(*arb->body_b)).value())));
             }
         }
     }

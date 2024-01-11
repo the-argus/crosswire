@@ -15,6 +15,8 @@ struct player_t {
         player_t();
         ~player_t();
 
+        uint8_t toolCount = 5;
+
     private:
         static constexpr float speed = 100;
         static constexpr float bounding_box_size = 10;
@@ -22,7 +24,6 @@ struct player_t {
         physics::raw_body_t body;
         physics::raw_poly_shape_t shape;
         bool holding_wire = false;
-        uint8_t toolCount = 5;
         wire_t wire = wire_t(this);
 };
 } // namespace cw

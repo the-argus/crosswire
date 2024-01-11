@@ -22,24 +22,24 @@ void wire_t::draw() {
 void wire_t::update() {
     
 }
-void wire_t::start_wire(build_site_t build_site) {
+void wire_t::start_wire(build_site_t& build_site) {
     wire_port_1 = &build_site;
     joints.push_back(wire_port_1->get_position());
     wire_port_1->set_state(1);
 }
-void wire_t::end_wire(build_site_t build_site) {
+void wire_t::end_wire(build_site_t& build_site) {
     wire_port_2 = &build_site;
     joints.push_back(wire_port_1->get_position());
     wire_port_1->set_state(2);
     wire_port_2->set_state(2);
 }
 void wire_t::spawn_tool(lib::vect_t position) {
-    if (check_wire_validity() && playerRef.toolCount > 0) {
-        playerRef->toolCount -= 1
+    if (check_wire_validity() && playerRef->toolCount > 0) {
+        playerRef->toolCount -= 1;
         joints.push_back(position);
     }
 }
-bool check_wire_validity() {
+bool wire_t::check_wire_validity() {
     // test for collision between wire and the global static body
     return true;
 }
