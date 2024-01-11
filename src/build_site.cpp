@@ -1,19 +1,16 @@
 #include "build_site.hpp"
 #include "chipmunk/chipmunk_types.h"
 #include "game_ids.hpp"
-#include "globals.hpp"
 #include "physics.hpp"
-#include "input.hpp"
-#include "player.hpp"
 #include "thelib/rect.hpp"
 #include "thelib/shape.hpp"
 #include <raylib.h>
-#include <stdint.h>
+#include <cstdint>
 
 namespace cw {
 
 build_site_t::build_site_t() 
-    : body(physics::create_body({
+    : body(physics::create_body(game_id_e::Build_Site, {
         .type = lib::body_t::Type::STATIC, 
         .mass = 1.0f, 
         .moment = INFINITY
