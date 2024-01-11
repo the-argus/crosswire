@@ -165,7 +165,59 @@ lib::opt_t<void *> get_user_data(const lib::body_t &body) noexcept
     }
 }
 
-raw_body_t get_handle_from_body(const lib::body_t &) noexcept;
+template <typename T> bool errhandle(typename T::get_handle_err_code_e errcode)
+{
+    const auto *name = typeid(typename T::type).name();
+    using code = typename T::get_handle_err_code_e;
+    switch (errcode) {
+    case code::Okay:
+        return true;
+    case code::AllocationShrunk:
+    case code::ItemNoLongerValid:
+        LN_FATAL_FMT(
+            "Attempt to get handle from {}, but the {} has been "
+            "deleted? I'm not sure how you did this, except maybe if "
+            "you're doing some unsafe pointer business in release mode?",
+            name, name);
+        break;
+    case code::ItemNotInAllocator:
+        LN_FATAL_FMT("Attempted to get the handle for a physics {} which was "
+                     "not allocated using the physics module.",
+                     name);
+        break;
+    default:
+        LN_FATAL_FMT(
+            "Unable to construct handle for {} from item in physics module, "
+            "definitely due to a programmer error.",
+            name);
+        break;
+    }
+    std::abort();
+    return false;
+}
+
+raw_body_t get_handle_from_body(const lib::body_t &body) noexcept
+{
+    auto res = bodies.value().get_handle_from_item(&body);
+    errhandle<body_allocator>(res.status());
+    return res.release();
+}
+
+raw_segment_shape_t
+get_handle_from_segment_shape(const lib::segment_shape_t &shape) noexcept
+{
+    auto res = segment_shapes.value().get_handle_from_item(&shape);
+    errhandle<segment_shape_allocator>(res.status());
+    return res.release();
+}
+
+raw_poly_shape_t
+get_handle_from_polygon_shape(const lib::poly_shape_t &shape) noexcept
+{
+    auto res = poly_shapes.value().get_handle_from_item(&shape);
+    errhandle<poly_shape_allocator>(res.status());
+    return res.release();
+}
 
 void add_collision_handler(const cpCollisionHandler &handler) noexcept
 {

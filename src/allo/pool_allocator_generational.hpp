@@ -47,6 +47,7 @@ requires(
     ) class pool_allocator_generational_t
 {
   public:
+    using type = T;
     inline static constexpr pool_allocator_generational_options_t
         passed_options = options;
     static_assert(
@@ -247,10 +248,12 @@ requires(
         static_assert(sizeof(T) == sizeof(m_items_buffer.data()[0]));
 
         if (item) [[likely]] {
-            if (item >= m_items_buffer.data() &&
-                item < m_items_buffer.data() + m_items_buffer.size()) {
+            if ((void *)item >= (void *)m_items_buffer.data() &&
+                (void *)item <
+                    (void *)(m_items_buffer.data() + m_items_buffer.size())) {
 
-                if (item >= m_items_buffer.data() + m_end_guess) {
+                if ((void *)item >=
+                    (void *)(m_items_buffer.data() + m_end_guess)) {
                     return get_handle_err_code_e::AllocationShrunk;
                 } else {
                     T *begin = &m_items_buffer.data()->data;
