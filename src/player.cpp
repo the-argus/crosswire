@@ -42,6 +42,7 @@ player_t::~player_t() {
 
 void player_t::draw()
 {
+    wire.draw();
     // draw sprite
     // lib::vect_t pos = physics::get_body(body).position();
 

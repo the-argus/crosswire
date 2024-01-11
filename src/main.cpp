@@ -1,6 +1,8 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #endif
+#include "build_site.hpp"
+#include "thelib/vect.hpp"
 #include "bullet.hpp"
 #include "constants/screen.hpp"
 #include "debug_level.hpp"
@@ -23,6 +25,9 @@ static void draw();
 static void draw_hud();
 
 static lib::opt_t<player_t> my_player;
+static lib::opt_t<build_site_t> build_site_1;
+static lib::opt_t<build_site_t> build_site_2;
+static lib::opt_t<build_site_t> build_site_3;
 
 #ifdef __EMSCRIPTEN__
 extern "C" int emsc_main(void)
@@ -41,6 +46,9 @@ int main()
 
     // wait to initialize player until after physics
     my_player.emplace();
+    build_site_1.emplace(lib::vect_t(100,300));
+    build_site_2.emplace(lib::vect_t(500,600));
+    build_site_3.emplace(lib::vect_t(400,100));
 
     set_main_camera(Camera2D{
         // Camera offset (displacement from target)
@@ -60,15 +68,17 @@ int main()
             update();
         }
 #endif
+        resources::cleanup();
         CloseWindow();
     }
 
     // destroy player before cleaning up physics. not necessary but cool!!!!!
     my_player.reset();
+    terrain::cleanup();
     physics::cleanup();
     bullet::cleanup();
     resources::cleanup();
-
+    
     return 0;
 }
 
