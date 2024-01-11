@@ -240,7 +240,7 @@ requires(
 
     /// Reverse-engineer a handle from a pointer to an item.
     [[nodiscard]] inline lib::result_t<handle_t, get_handle_err_code_e>
-    get_handle_from_item(T *item) TESTING_NOEXCEPT
+    get_handle_from_item(const T *item) TESTING_NOEXCEPT
     {
         static_assert(alignof(T) ==
                       alignof(decltype(m_items_buffer.data()[0])));
