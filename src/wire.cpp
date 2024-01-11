@@ -9,7 +9,13 @@ wire_t::wire_t(player_t* player) {
     playerRef = player;
 }
 void wire_t::draw() {
-    for (int i = 0; i < joints.size() - 2; i++) {
+    if (joints.empty())
+        return;
+
+    // if there are joints, then wire port 1 should also exist
+    assert(wire_port_1);
+
+    for (int i = 0; i < static_cast<int64_t>(joints.size()) - 2; i++) {
         DrawLineV(joints[i], joints[i+1], GRAY);
     }
 

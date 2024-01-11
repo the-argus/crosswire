@@ -23,6 +23,6 @@ namespace cw {
         private:
             build_site_t* wire_port_1 = nullptr;
             build_site_t* wire_port_2 = nullptr;
-            std::vector<lib::vect_t> joints = std::vector<lib::vect_t>(); 
+            std::vector<lib::vect_t> joints; 
     };
 }
