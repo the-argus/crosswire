@@ -6,6 +6,9 @@
 
 namespace cw::bullet {
 
+void init() noexcept;
+void cleanup() noexcept;
+
 /// mass used by spawn_bullet function
 inline constexpr float global_mass = 1;
 
@@ -29,13 +32,25 @@ inline constexpr allo::pool_allocator_generational_options_t
         .reallocation_ratio = 1.5f,
     };
 
+// Options passed to bullet::spawn and bullet constructor
+struct bullet_creation_options_t
+{
+    lib::vect_t position;
+    lib::vect_t initial_velocity;
+};
+
 /// Data stored per-bullet
 struct bullet_t
 {
+    ~bullet_t() noexcept;
     physics::raw_body_t body;
+    physics::raw_poly_shape_t shape;
     /// Get the position of this bullet
     [[nodiscard]] lib::vect_t position() const noexcept;
     [[nodiscard]] lib::opt_t<void *> user_data() const noexcept;
+
+    /// Do not use this constructor unless you know what you're doing
+    explicit bullet_t(const bullet_creation_options_t &) noexcept;
 };
 
 using bullet_allocator =
@@ -51,20 +66,14 @@ lib::opt_t<bullet_t &> try_get(raw_bullet_t handle) noexcept;
 /// successful, false if the handle didn't point to anything.
 bool try_destroy(raw_bullet_t handle) noexcept;
 
-// Options passed to bullet::spawn
-struct bullet_creation_options_t
-{
-    lib::vect_t position;
-    lib::vect_t initial_velocity;
-};
-
 /// Spawns a bullet and stores no data inside of it
-void spawn(const bullet_creation_options_t &options) noexcept;
+raw_bullet_t spawn(const bullet_creation_options_t &options) noexcept;
 
 /// Spawn a bullet and reserve some user data for it: a pointer going to
 /// anything. Be careful with this one: be sure the thing this pointer points to
 /// does NOT get destroyed before the bullet does.
-void spawn(const bullet_creation_options_t &options, void *user_data) noexcept;
+raw_bullet_t spawn(const bullet_creation_options_t &options,
+                   void *user_data) noexcept;
 
 /// Returns true if the body is a bullet and false if its something else.
 bool is_body_bullet(cpBody &maybe_bullet);

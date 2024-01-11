@@ -1,6 +1,7 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #endif
+#include "bullet.hpp"
 #include "constants/screen.hpp"
 #include "debug_level.hpp"
 #include "globals.hpp"
@@ -36,6 +37,7 @@ int main()
     physics::init();
     terrain::init();
     resources::load();
+    bullet::init();
 
     // wait to initialize player until after physics
     my_player.emplace();
@@ -64,6 +66,7 @@ int main()
     // destroy player before cleaning up physics. not necessary but cool!!!!!
     my_player.reset();
     physics::cleanup();
+    bullet::cleanup();
     resources::cleanup();
 
     return 0;
