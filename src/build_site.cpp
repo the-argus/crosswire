@@ -8,6 +8,7 @@
 #include "thelib/rect.hpp"
 #include "thelib/shape.hpp"
 #include <raylib.h>
+#include <stdint.h>
 
 namespace cw {
 
@@ -22,12 +23,16 @@ build_site_t::build_site_t()
         .radius = 1
     }))
 {
-    // set the body's ID
-    set_physics_id(physics::get_body(body), game_id_e::Build_Site);
+    // set the body's ID and pointer
+    physics::set_user_data_and_id(body, game_id_e::Build_Site, this);
 }
 
 void build_site_t::draw() {
     // display the build site sprite
+}
+
+uint8_t build_site_t::get_state() {
+    return state;
 }
 
 }

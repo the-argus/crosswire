@@ -11,6 +11,7 @@ struct player_t {
         static void collision_handler_static(cpArbiter *arb, cpSpace *space, cpDataPointer userData);
 
         player_t();
+        ~player_t();
 
     private:
         static constexpr float speed = 100;
@@ -18,5 +19,6 @@ struct player_t {
         static constexpr float cam_followspeed = 16;
         physics::raw_body_t body;
         physics::raw_poly_shape_t shape;
+        bool holding_wire = false;
 };
 } // namespace cw
