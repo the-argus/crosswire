@@ -1,11 +1,15 @@
 #pragma once
 
+#include "allo/pool_allocator_generational.hpp"
 #include "physics.hpp"
+#include "root_allocator.hpp"
 
 namespace cw::bullet {
 
 /// mass used by spawn_bullet function
 inline constexpr float global_mass = 1;
+
+/// The description of the hitbox for all bullets
 inline constexpr lib::poly_shape_t::square_options_t
     global_square_hitbox_options{
         .bounding =
@@ -16,37 +20,52 @@ inline constexpr lib::poly_shape_t::square_options_t
         .radius = 1,
     };
 
-/// Spawns a bullet and stores no data inside of it
-inline void spawn(lib::vect_t position, lib::vect_t initial_velocity) noexcept
+/// The allocation behavior of the memory where bullets are stored
+inline constexpr allo::pool_allocator_generational_options_t
+    bullet_memory_options{
+        .allocator = root_allocator,
+        .allocation_type = allo::interfaces::AllocationType::Bullets,
+        .reallocating = true,
+        .reallocation_ratio = 1.5f,
+    };
+
+/// Data stored per-bullet
+struct bullet_t
 {
-    auto handle = physics::create_body(game_id_e::Bullet,
-                                       lib::body_t::body_options_t{
-                                           .type = lib::body_t::Type::DYNAMIC,
-                                           .mass = global_mass,
-                                           .moment = INFINITY,
-                                       });
+    physics::raw_body_t body;
+    /// Get the position of this bullet
+    [[nodiscard]] lib::vect_t position() const noexcept;
+    [[nodiscard]] lib::opt_t<void *> user_data() const noexcept;
+};
 
-    lib::body_t &actual = physics::get_body(handle);
+using bullet_allocator =
+    allo::pool_allocator_generational_t<bullet_t, bullet_memory_options>;
 
-    actual.set_position(position);
-    actual.set_velocity(initial_velocity);
+using raw_bullet_t = bullet_allocator::handle_t;
 
-    auto shape_handle =
-        physics::create_box_shape(handle, global_square_hitbox_options);
+/// Try to get a bullet, otherwise return null. Useful if you have stored some
+/// references to bullets but the bullets may have been destroyed since then.
+lib::opt_t<bullet_t &> try_get(raw_bullet_t handle) noexcept;
 
-    // set the id of the shape to be bullet, for good measure
-    auto &shape_actual = physics::get_polygon_shape(shape_handle);
-    set_physics_id(*shape_actual.parent_cast(), game_id_e::Bullet);
-}
+/// Attempt to destroy the bullet pointed at by the handle. Returns true if
+/// successful, false if the handle didn't point to anything.
+bool try_destroy(raw_bullet_t handle) noexcept;
 
-/// Destroy a cpBody ONLY if it is a bullet, otherwise return false.
-/// Returns true if it successfully deletes the bullet.
-inline bool destroy_body_if_its_a_bullet(cpBody &maybe_bullet) {
-    if (auto id = physics::get_id(maybe_bullet)) {
-        if (id.value() == game_id_e::Bullet) {
-            physics::delete_body();
-        }
-    }
-}
+// Options passed to bullet::spawn
+struct bullet_creation_options_t
+{
+    lib::vect_t position;
+    lib::vect_t initial_velocity;
+};
 
+/// Spawns a bullet and stores no data inside of it
+void spawn(const bullet_creation_options_t &options) noexcept;
+
+/// Spawn a bullet and reserve some user data for it: a pointer going to
+/// anything. Be careful with this one: be sure the thing this pointer points to
+/// does NOT get destroyed before the bullet does.
+void spawn(const bullet_creation_options_t &options, void *user_data) noexcept;
+
+/// Returns true if the body is a bullet and false if its something else.
+bool is_body_bullet(cpBody &maybe_bullet);
 } // namespace cw::bullet

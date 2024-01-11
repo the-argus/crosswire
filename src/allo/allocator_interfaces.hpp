@@ -17,6 +17,7 @@ enum class AllocationType
     /// in release builds
     Debug,
 
+
     /// ECS memory
     Component,
     Texture,
@@ -26,6 +27,8 @@ enum class AllocationType
     Singleton,
     StackAllocator,
 
+    /// Just for crosswire
+    Bullets,
     Physics,
 
     /// maximum enum value, also should never be used
