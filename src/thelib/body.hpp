@@ -25,7 +25,7 @@ class body_t : public ::cpBody
         float moment;
     };
 
-    inline constexpr body_t(const cpBody &original) TESTING_NOEXCEPT
+    explicit inline constexpr body_t(const cpBody &original) TESTING_NOEXCEPT
         : ::cpBody(original)
     {
     }

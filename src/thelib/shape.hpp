@@ -16,7 +16,7 @@ class shape_t : public ::cpShape
     // youre not inteded to make one of these, its abstract
     shape_t() = delete;
 
-    inline constexpr shape_t(const cpShape &original) TESTING_NOEXCEPT
+    explicit inline constexpr shape_t(const cpShape &original) TESTING_NOEXCEPT
         : ::cpShape(original)
     {
     }
@@ -86,8 +86,8 @@ class poly_shape_t : public ::cpPolyShape
         float radius;
     };
 
-    inline constexpr poly_shape_t(const cpPolyShape &original) TESTING_NOEXCEPT
-        : ::cpPolyShape(original)
+    explicit inline constexpr poly_shape_t(const cpPolyShape &original)
+        TESTING_NOEXCEPT : ::cpPolyShape(original)
     {
     }
 
@@ -118,7 +118,7 @@ class segment_shape_t : public ::cpSegmentShape
   public:
     segment_shape_t() = delete;
 
-    inline constexpr segment_shape_t(const cpSegmentShape &original)
+    explicit inline constexpr segment_shape_t(const cpSegmentShape &original)
         TESTING_NOEXCEPT : ::cpSegmentShape(original)
     {
     }
