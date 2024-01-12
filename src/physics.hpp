@@ -1,6 +1,7 @@
 #pragma once
 #include "allo/pool_allocator_generational.hpp"
 #include "game_ids.hpp"
+#include "physics_collision_types.hpp"
 #include "root_allocator.hpp"
 #include "thelib/body.hpp"
 #include "thelib/opt.hpp"
@@ -76,6 +77,21 @@ void update(float timestep) noexcept;
 /// According to chipmunk docs, it is guaranteed to always be called in even
 /// amounts with the beginFunc.
 void add_collision_handler(const cpCollisionHandler &handler) noexcept;
+
+struct collision_handler_wildcard_options_t
+{
+    const collision_type_e typeA;
+    cpCollisionBeginFunc beginFunc;
+    cpCollisionPreSolveFunc preSolveFunc;
+    cpCollisionPostSolveFunc postSolveFunc;
+    cpCollisionSeparateFunc separateFunc;
+    cpDataPointer userData;
+};
+
+/// Same as regular collision handler, but there is no typeB: instead, it
+/// provides handler calls whenever anything of typeA hits *anything* else.
+void add_collision_handler_wildcard(
+    const collision_handler_wildcard_options_t &options) noexcept;
 
 /// Create a physics body and return a handle to it.
 raw_body_t create_body(game_id_e id,

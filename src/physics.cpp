@@ -296,6 +296,23 @@ void add_collision_handler(const cpCollisionHandler &handler) noexcept
         new_handler->separateFunc = handler.separateFunc;
 }
 
+void add_collision_handler_wildcard(
+    const collision_handler_wildcard_options_t &options) noexcept
+{
+    cpCollisionHandler *new_handler = cpSpaceAddWildcardHandler(
+        &space.value(), (cpCollisionType)options.typeA);
+    if (options.postSolveFunc)
+        new_handler->postSolveFunc = options.postSolveFunc;
+    if (options.preSolveFunc)
+        new_handler->preSolveFunc = options.preSolveFunc;
+    if (options.userData)
+        new_handler->userData = options.userData;
+    if (options.beginFunc)
+        new_handler->beginFunc = options.beginFunc;
+    if (options.separateFunc)
+        new_handler->separateFunc = options.separateFunc;
+}
+
 /// Move all physics objects and potentially call collision handlers
 void update(float timestep) noexcept { space.value().step(timestep); }
 
