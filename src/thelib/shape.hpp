@@ -81,6 +81,7 @@ class poly_shape_t : public ::cpPolyShape
 
     struct default_options_t
     {
+        cpCollisionType collision_type;
         slice_t<vect_t> vertices;
         float radius;
     };
@@ -95,6 +96,7 @@ class poly_shape_t : public ::cpPolyShape
 
     struct square_options_t
     {
+        cpCollisionType collision_type;
         lib::rect_t bounding;
         float radius;
     };
@@ -123,6 +125,7 @@ class segment_shape_t : public ::cpSegmentShape
 
     struct options_t
     {
+        cpCollisionType collision_type;
         lib::vect_t a;
         lib::vect_t b;
         float radius;

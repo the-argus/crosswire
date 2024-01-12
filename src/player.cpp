@@ -5,6 +5,7 @@
 #include "physics.hpp"
 #include "thelib/rect.hpp"
 #include "thelib/shape.hpp"
+#include "physics_collision_types.hpp"
 #include <memory>
 #include <raylib.h>
 
@@ -18,6 +19,7 @@ player_t::player_t()
                                 })),
       shape(physics::create_box_shape(
           body, {
+                    .collision_type = (cpCollisionType)physics::collision_type_e::Player,
                     .bounding = lib::rect_t({0, 0}, {bounding_box_size}),
                     .radius = 1,
                 }))

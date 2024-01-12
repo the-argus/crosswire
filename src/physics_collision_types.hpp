@@ -9,6 +9,7 @@ enum class collision_type_e : cpCollisionType
     Ditch,
     Obstacle,
     BuildSite,
+    Bullet,
 
     // this one should always be last
     MAX,

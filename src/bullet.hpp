@@ -2,6 +2,7 @@
 
 #include "allo/pool_allocator_generational.hpp"
 #include "physics.hpp"
+#include "physics_collision_types.hpp"
 #include "root_allocator.hpp"
 
 namespace cw::bullet {
@@ -15,6 +16,7 @@ inline constexpr float global_mass = 1;
 /// The description of the hitbox for all bullets
 inline constexpr lib::poly_shape_t::square_options_t
     global_square_hitbox_options{
+        .collision_type = (cpCollisionType)physics::collision_type_e::Bullet,
         .bounding =
             lib::rect_t{
                 {0, 0},

@@ -126,12 +126,14 @@ poly_shape_t::poly_shape_t(lib::body_t &body,
         this, &body, static_cast<int>(options.vertices.size()),
         reinterpret_cast<const cpVect *>(options.vertices.data()),
         options.radius);
+    cpShapeSetCollisionType(&shape, options.collision_type);
 }
 
 poly_shape_t::poly_shape_t(lib::body_t &body,
                            const square_options_t &options) TESTING_NOEXCEPT
 {
     cpBoxShapeInit2(this, &body, options.bounding, options.radius);
+    cpShapeSetCollisionType(&shape, options.collision_type);
 }
 
 vect_t segment_shape_t::a() const TESTING_NOEXCEPT
@@ -159,5 +161,7 @@ segment_shape_t::segment_shape_t(lib::body_t &body,
     // publicly inherits from cpBody?
     cpSegmentShapeInit(this, reinterpret_cast<cpBody *>(&body), options.a,
                        options.b, options.radius);
+
+    cpShapeSetCollisionType(&shape, options.collision_type);
 }
 } // namespace lib

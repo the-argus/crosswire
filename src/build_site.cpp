@@ -1,6 +1,6 @@
 #include "build_site.hpp"
-#include "chipmunk/chipmunk_types.h"
 #include "game_ids.hpp"
+#include "physics_collision_types.hpp"
 #include "physics.hpp"
 #include "thelib/rect.hpp"
 #include "thelib/shape.hpp"
@@ -13,6 +13,7 @@ namespace cw {
 build_site_t::build_site_t(lib::vect_t pos) 
     : 
     shape(physics::create_box_shape(physics::get_static_body(), {
+        .collision_type = (cpCollisionType)physics::collision_type_e::BuildSite,
         .bounding = lib::rect_t({pos.x, pos.y}, {bounding_box_size}),
         .radius = 1
     }))
