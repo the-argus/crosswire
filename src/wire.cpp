@@ -15,14 +15,14 @@ void wire_t::draw() {
     // if there are joints, then wire port 1 should also exist
     assert(wire_port_1);
 
-    for (int i = 0; i < static_cast<int64_t>(joints.size()) - 2; i++) {
+    for (int i = 0; i < static_cast<int64_t>(joints.size()) - 1; i++) {
         DrawLineV(joints[i], joints[i+1], GRAY);
     }
 
     if (check_wire_validity()) {
-        DrawLineV(joints[joints.size()-2], joints[joints.size()-1], GRAY);
+        DrawLineV(joints[joints.size()-1], physics::get_body(playerRef->body).position(), GRAY);
     } else {
-        DrawLineV(joints[joints.size()-2], joints[joints.size()-1], RED);
+        DrawLineV(joints[joints.size()-1], physics::get_body(playerRef->body).position(), RED);
     }
 }
 void wire_t::update() {

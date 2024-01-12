@@ -91,6 +91,7 @@ void player_t::update()
 }
 
 void player_t::collision_handler_static(cpArbiter *arb, cpSpace *space, cpDataPointer userData) {
+    LN_DEBUG("collision");
     // Player collisions
     if (
         physics::get_id(physics::get_handle_from_body(*arb->body_a)).has_value() && 
