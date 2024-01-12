@@ -25,6 +25,11 @@ class body_t : public ::cpBody
         float moment;
     };
 
+    static lib::body_t *from_chipmunk(cpBody *body) TESTING_NOEXCEPT
+    {
+        return reinterpret_cast<lib::body_t *>(body);
+    }
+
     explicit inline constexpr body_t(const cpBody &original) TESTING_NOEXCEPT
         : ::cpBody(original)
     {

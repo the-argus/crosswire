@@ -98,7 +98,7 @@ bool try_destroy(raw_bullet_t handle) noexcept
 
 bool is_body_bullet(cpBody &maybe_bullet)
 {
-    if (auto id = physics::get_id(maybe_bullet)) {
+    if (auto id = physics::get_id(*lib::body_t::from_chipmunk(&maybe_bullet))) {
         return id.value() == game_id_e::Bullet;
     }
     return false;
