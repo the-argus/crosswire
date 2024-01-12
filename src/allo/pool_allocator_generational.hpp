@@ -269,6 +269,7 @@ requires(
                     }
                 }
             }
+            return get_handle_err_code_e::ItemNotInAllocator;
         } else {
             return get_handle_err_code_e::Null;
         }
