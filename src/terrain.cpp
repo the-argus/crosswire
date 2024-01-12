@@ -1,5 +1,6 @@
 #include "terrain.hpp"
 #include "physics.hpp"
+#include "physics_collision_types.hpp"
 #include "thelib/opt.hpp"
 #include <array>
 #include <vector>
@@ -52,8 +53,24 @@ void load_polygon(const game_id_e terrain_id,
         auto shape =
             physics::create_segment_shape(physics::get_static_body(), options);
         shapes_by_id.value()[index].push_back(shape);
-        set_physics_id(*physics::get_segment_shape(shape).parent_cast(),
-                       terrain_id);
+        auto &actual = physics::get_segment_shape(shape);
+        set_physics_id(*actual.parent_cast(), terrain_id);
+
+        // convert game id to collision type
+        switch (terrain_id) {
+        case game_id_e::Terrain_Ditch:
+            actual.parent_cast()->set_collision_type(
+                (cpCollisionType)physics::collision_type_e::Ditch);
+            break;
+        case cw::game_id_e::Terrain_Obstacle:
+            actual.parent_cast()->set_collision_type(
+                (cpCollisionType)physics::collision_type_e::Obstacle);
+            break;
+        default:
+            LN_WARN("Terrain polygon loaded with a type that is not ditch or "
+                    "obstacle, not setting its collision type to anything.");
+            break;
+        }
     };
 
     if (vertices.size() == 2) {
