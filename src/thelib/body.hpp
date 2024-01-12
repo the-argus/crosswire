@@ -7,12 +7,15 @@ namespace lib {
 class body_t : public ::cpBody
 {
   public:
-    enum class Type : uint8_t
+    enum class Type : int
     {
         DYNAMIC = ::CP_BODY_TYPE_DYNAMIC,
         KINEMATIC = ::CP_BODY_TYPE_KINEMATIC,
         STATIC = ::CP_BODY_TYPE_STATIC,
     };
+
+    static_assert(sizeof(Type::STATIC) == sizeof(::CP_BODY_TYPE_STATIC));
+
     body_t() = delete;
 
     struct body_options_t
