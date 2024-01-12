@@ -284,11 +284,16 @@ void add_collision_handler(const cpCollisionHandler &handler) noexcept
 {
     cpCollisionHandler *new_handler = cpSpaceAddCollisionHandler(
         &space.value(), handler.typeA, handler.typeB);
-    new_handler->postSolveFunc = handler.postSolveFunc;
-    new_handler->preSolveFunc = handler.preSolveFunc;
-    new_handler->userData = handler.userData;
-    new_handler->beginFunc = handler.beginFunc;
-    new_handler->separateFunc = handler.separateFunc;
+    if (handler.postSolveFunc)
+        new_handler->postSolveFunc = handler.postSolveFunc;
+    if (handler.preSolveFunc)
+        new_handler->preSolveFunc = handler.preSolveFunc;
+    if (handler.userData)
+        new_handler->userData = handler.userData;
+    if (handler.beginFunc)
+        new_handler->beginFunc = handler.beginFunc;
+    if (handler.separateFunc)
+        new_handler->separateFunc = handler.separateFunc;
 }
 
 /// Move all physics objects and potentially call collision handlers
