@@ -258,7 +258,7 @@ requires(
                 } else {
                     T *begin = &m_items_buffer.data()->data;
                     assert(((void *)begin) == ((void *)m_items_buffer.data()));
-                    assert(begin < item);
+                    assert(begin <= item);
                     index_t index = item - begin;
                     assert(index < m_activity_buffer.size());
                     if (m_activity_buffer.data()[index]) {
