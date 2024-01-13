@@ -77,13 +77,19 @@ void player_t::update()
         velocity /= 2;
     }
 
+
     physics::get_body(body).set_velocity(velocity);
 
     // orient the body to the dir of the velocity
 
-    // Lerp the camera to the players position
+    // get the players position
     lib::vect_t pos = physics::get_body(body).position();
 
+
+    if (IsKeyPressed(KEY_SPACE)) {
+        wire.spawn_tool(lib::vect_t(pos.x, pos.y));
+    }
+    // Lerp the camera to the players position
     Camera2D &camera_player = cw::get_main_camera();
     camera_player.target.x +=
         (pos.x - camera_player.target.x) / cam_followspeed;
@@ -93,7 +99,7 @@ void player_t::update()
 
 void player_t::collision_handler_static(cpArbiter *arb, cpSpace *space, cpDataPointer userData) {
     LN_DEBUG("collision");
-    if (!IsKeyDown(KEY_SPACE))
+    if (!IsKeyPressed(KEY_SPACE))
         return;
 
     // If colliding with a body whose ID is build_site and player presses a button and that build site is not attached to wire
@@ -103,7 +109,7 @@ void player_t::collision_handler_static(cpArbiter *arb, cpSpace *space, cpDataPo
         maybe_other_id.value() == game_id_e::Build_Site && 
         !((build_site_t*)(physics::get_user_data(body_b).value()))->get_state()
     ) {
-        // If player is not holding wire
+        // If player is not holding wire 
         if (!((player_t*)(userData))->holding_wire) {
             // attach wire to that build site
             if (auto data = physics::get_user_data(body_b)) {
@@ -115,7 +121,7 @@ void player_t::collision_handler_static(cpArbiter *arb, cpSpace *space, cpDataPo
         else if (((player_t*)(userData))->wire.check_wire_validity()) {
             // both build sites the wire connects to shall be marked as complete
             ((player_t*)(userData))->wire.end_wire((*(build_site_t*)(physics::get_user_data(body_b).value())));
-        }
+        } 
     }
 }
 

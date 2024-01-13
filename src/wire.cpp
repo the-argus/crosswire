@@ -18,7 +18,7 @@ void wire_t::draw() {
     for (int i = 0; i < static_cast<int64_t>(joints.size()) - 1; i++) {
         DrawLineV(joints[i], joints[i+1], GRAY);
     }
-
+    
     if (check_wire_validity()) {
         DrawLineV(joints[joints.size()-1], physics::get_body(playerRef->body).position(), GRAY);
     } else {
@@ -35,7 +35,7 @@ void wire_t::start_wire(build_site_t& build_site) {
 }
 void wire_t::end_wire(build_site_t& build_site) {
     wire_port_2 = &build_site;
-    joints.push_back(wire_port_1->get_position());
+    joints.push_back(wire_port_2->get_position());
     wire_port_1->set_state(2);
     wire_port_2->set_state(2);
 }
