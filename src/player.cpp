@@ -86,7 +86,7 @@ void player_t::update()
     lib::vect_t pos = physics::get_body(body).position();
 
 
-    if (IsKeyPressed(KEY_SPACE)) {
+    if (IsKeyPressed(KEY_SPACE) && holding_wire) {
         wire.spawn_tool(lib::vect_t(pos.x, pos.y));
     }
     // Lerp the camera to the players position
@@ -114,6 +114,7 @@ void player_t::collision_handler_static(cpArbiter *arb, cpSpace *space, cpDataPo
             // attach wire to that build site
             if (auto data = physics::get_user_data(body_b)) {
                 ((player_t*)(userData))->wire.start_wire((*(build_site_t*)(data.value())));
+                ((player_t*)(userData))->holding_wire = true;
             }
             // the player will now be holding their wire which is connected to the build site
         }
@@ -121,6 +122,7 @@ void player_t::collision_handler_static(cpArbiter *arb, cpSpace *space, cpDataPo
         else if (((player_t*)(userData))->wire.check_wire_validity()) {
             // both build sites the wire connects to shall be marked as complete
             ((player_t*)(userData))->wire.end_wire((*(build_site_t*)(physics::get_user_data(body_b).value())));
+            ((player_t*)(userData))->holding_wire = false;
         } 
     }
 }
