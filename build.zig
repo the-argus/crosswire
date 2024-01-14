@@ -171,6 +171,11 @@ pub fn build(b: *std.Build) !void {
     for (include_dirs) |include_dir| {
         try flags.append(b.fmt("-I{s}", .{include_dir}));
     }
+    // add editor headers as private includes
+    {
+        const editor_dep = b.dependency("editor", .{ .target = target, .optimize = mode });
+        try flags.append(b.fmt("-I{s}/include", .{editor_dep.builder.install_path}));
+    }
 
     var tests_lib = b.addSharedLibrary(.{
         .name = "main",
@@ -235,6 +240,17 @@ pub fn build(b: *std.Build) !void {
         }
         const run_step = b.step("run", "Run the app");
         run_step.dependOn(&run_cmd.step);
+    }
+
+    // zig build editor
+    {
+        const editor_dep = b.dependency("editor", .{ .target = target, .optimize = mode });
+        const editor_artifact = editor_dep.artifact("crosswire_editor");
+        editor_artifact.addIncludePath(.{ .path = "levels/editor_include/" });
+        const run_cmd = b.addRunArtifact(editor_artifact);
+        run_cmd.step.dependOn(editor_dep.builder.getInstallStep());
+        const editor_step = b.step("editor", "Run the level editor");
+        editor_step.dependOn(&run_cmd.step);
     }
 
     // windows requires that no targets use pkg-config. of course.

@@ -32,6 +32,8 @@
               pkg-config
               libGL
               zig_0_11
+              SDL2
+              SDL2_image
             ])
             ++ (with pkgs.xorg; [
               libX11
