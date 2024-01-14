@@ -98,28 +98,54 @@ void player_t::update()
 }
 
 void player_t::collision_handler_static(cpArbiter *arb, cpSpace *space, cpDataPointer userData) {
-    LN_DEBUG("collision");
-    if (!IsKeyPressed(KEY_SPACE))
+    if (!IsKeyDown(KEY_SPACE))
         return;
 
     // If colliding with a body whose ID is build_site and player presses a button and that build site is not attached to wire
-    physics::raw_poly_shape_t shape_b = physics::get_handle_from_polygon_shape((lib::shape_t*) *arb->b);
-    auto maybe_other_id = physics::get_id(shape_b);
-    if (maybe_other_id.has_value() &&
-        maybe_other_id.value() == game_id_e::Build_Site && 
-        !((build_site_t*)(physics::get_user_data(shape_b).value()))->get_state()
+    physics::raw_poly_shape_t shape_a = physics::get_handle_from_polygon_shape(*((lib::poly_shape_t*)arb->a));
+    physics::raw_poly_shape_t shape_b = physics::get_handle_from_polygon_shape(*((lib::poly_shape_t*)arb->b));
+    auto maybe_other_id_a = physics::get_id(shape_a);
+    auto maybe_other_id_b = physics::get_id(shape_b);
+
+    LN_DEBUG_FMT("Shape b located at: {}", (void*)&shape_b);
+    LN_DEBUG_FMT("Shape a located at: {}", (void*)&shape_a);
+    if (maybe_other_id_a.has_value() &&
+        maybe_other_id_a.value() == game_id_e::Build_Site && 
+        ((build_site_t*)(physics::get_user_data(shape_a).value()))->get_state() == 0
     ) {
-        // If player is not holding wire 
-        if (!((player_t*)(userData))->holding_wire) {
+         // If player is not holding wire 
+         if (!((player_t*)(userData))->holding_wire) {
+            // attach wire to that build site
+            if (auto data = physics::get_user_data(shape_a)) {
+                ((player_t*)(userData))->wire.start_wire((*(build_site_t*)(data.value())));
+                ((player_t*)(userData))->holding_wire = true;
+            }
+            // the player will now be holding their wire which is connected to the build site
+        } else if (((player_t*)(userData))->wire.check_wire_validity()) { // If player is holding wire and the wire is not tangled
+            // both build sites the wire connects to shall be marked as complete
+            ((player_t*)(userData))->wire.end_wire((*(build_site_t*)(physics::get_user_data(shape_a).value())));
+            ((player_t*)(userData))->holding_wire = false;
+        } 
+    }
+
+
+
+
+
+    // the code is gonna be gross cuz either shapea or shapeb can be the player
+    if (maybe_other_id_b.has_value() &&
+        maybe_other_id_b.value() == game_id_e::Build_Site && 
+        ((build_site_t*)(physics::get_user_data(shape_b).value()))->get_state() == 0
+    ) {
+         // If player is not holding wire 
+         if (!((player_t*)(userData))->holding_wire) {
             // attach wire to that build site
             if (auto data = physics::get_user_data(shape_b)) {
                 ((player_t*)(userData))->wire.start_wire((*(build_site_t*)(data.value())));
                 ((player_t*)(userData))->holding_wire = true;
             }
             // the player will now be holding their wire which is connected to the build site
-        }
-        // If player is holding wire and the wire is not tangled
-        else if (((player_t*)(userData))->wire.check_wire_validity()) {
+        } else if (((player_t*)(userData))->wire.check_wire_validity()) { // If player is holding wire and the wire is not tangled
             // both build sites the wire connects to shall be marked as complete
             ((player_t*)(userData))->wire.end_wire((*(build_site_t*)(physics::get_user_data(shape_b).value())));
             ((player_t*)(userData))->holding_wire = false;

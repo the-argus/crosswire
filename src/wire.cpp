@@ -18,11 +18,12 @@ void wire_t::draw() {
     for (int i = 0; i < static_cast<int64_t>(joints.size()) - 1; i++) {
         DrawLineV(joints[i], joints[i+1], GRAY);
     }
-    
-    if (check_wire_validity()) {
-        DrawLineV(joints[joints.size()-1], physics::get_body(playerRef->body).position(), GRAY);
-    } else {
-        DrawLineV(joints[joints.size()-1], physics::get_body(playerRef->body).position(), RED);
+    if (playerRef->holding_wire && wire_port_1->get_state() != 2) {
+        if (check_wire_validity()) {
+            DrawLineV(joints[joints.size()-1], physics::get_body(playerRef->body).position(), GRAY);
+        } else {
+            DrawLineV(joints[joints.size()-1], physics::get_body(playerRef->body).position(), RED);
+        }
     }
 }
 void wire_t::update() {
