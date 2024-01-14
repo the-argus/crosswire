@@ -28,6 +28,7 @@ static lib::opt_t<player_t> my_player;
 static lib::opt_t<build_site_t> build_site_1;
 static lib::opt_t<build_site_t> build_site_2;
 static lib::opt_t<build_site_t> build_site_3;
+static lib::opt_t<build_site_t> build_site_4;
 
 #ifdef __EMSCRIPTEN__
 extern "C" int emsc_main(void)
@@ -47,8 +48,9 @@ int main()
     // wait to initialize player until after physics
     my_player.emplace();
     build_site_1.emplace(lib::vect_t(100,300));
-    build_site_2.emplace(lib::vect_t(500,600));
+    build_site_2.emplace(lib::vect_t(300,150));
     build_site_3.emplace(lib::vect_t(400,100));
+    build_site_4.emplace(lib::vect_t(200,250));
 
     set_main_camera(Camera2D{
         // Camera offset (displacement from target)

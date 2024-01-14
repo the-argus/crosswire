@@ -44,6 +44,9 @@ player_t::~player_t() {
 void player_t::draw()
 {
     wire.draw();
+    for (wire_t completed_wire : completed_wires) {
+        completed_wire.draw();
+    }
     // draw sprite
     // lib::vect_t pos = physics::get_body(body).position();
 
@@ -132,7 +135,7 @@ void player_t::collision_handler_static(cpArbiter *arb, cpSpace *space, cpDataPo
 
 
 
-    // the code is gonna be gross cuz either shapea or shapeb can be the player
+    // the code is gonna be gross cuz either shapea or shapeb can be the player (these 2 sets of if statements can definitely be combined)
     if (maybe_other_id_b.has_value() &&
         maybe_other_id_b.value() == game_id_e::Build_Site && 
         ((build_site_t*)(physics::get_user_data(shape_b).value()))->get_state() == 0
