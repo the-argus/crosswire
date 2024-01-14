@@ -13,7 +13,7 @@ struct player_t {
         void update();
         static void collision_handler_static(cpArbiter *arb, cpSpace *space, cpDataPointer userData);
 
-        player_t();
+        player_t() noexcept;
         ~player_t();
 
         uint8_t toolCount = 5;

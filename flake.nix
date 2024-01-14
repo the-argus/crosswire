@@ -1,5 +1,5 @@
 {
-  description = "Wonderful and Wacky Worms";
+  description = "Crosswire Game for 2024 new year new skils jam";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs?ref=nixos-unstable";

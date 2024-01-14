@@ -1,5 +1,8 @@
 #pragma once
 #include "thelib/slice.hpp"
+#ifdef ALLO_STACK_ALLOCATOR_USE_CTTI
+#include "ctti/typename.hpp"
+#endif
 #include <cstdint>
 #include <type_traits>
 #ifndef NDEBUG
@@ -63,7 +66,11 @@ class stack_allocator_t
                 inner_alloc(alignof(T), sizeof(T)))) [[likely]] {
             new (spot) T(std::forward<decltype(args)>(args)...);
             // store unique identifier for this type
+#ifdef ALLO_STACK_ALLOCATOR_USE_CTTI
+            m_last_type = ctti::nameof<T>().hash();
+#else
             m_last_type = typeid(T).hash_code();
+#endif
             return spot;
         } else {
 #ifdef ALLO_LOGGING
@@ -87,7 +94,14 @@ class stack_allocator_t
                       "Attempt to free type which is not nothrow destructible. "
                       "Was this pointer even allocated with this allocator?");
 #endif
-        if (typeid(T).hash_code() != m_last_type) [[unlikely]] {
+        if (
+#ifdef ALLO_STACK_ALLOCATOR_USE_CTTI
+            ctti::nameof<T>().hash()
+#else
+            typeid(T).hash_code()
+#endif
+
+            != m_last_type) [[unlikely]] {
 #ifdef ALLO_LOGGING
             LN_WARN("Type passed in to stack_allocator_t::free() is different "
                     "than the last allocated type.");

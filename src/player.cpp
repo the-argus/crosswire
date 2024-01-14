@@ -10,7 +10,7 @@
 #include <raylib.h>
 
 namespace cw {
-player_t::player_t()
+player_t::player_t() noexcept
     : body(physics::create_body(game_id_e::Player,
                                 {
                                     .type = lib::body_t::Type::DYNAMIC,

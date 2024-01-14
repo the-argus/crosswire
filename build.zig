@@ -5,7 +5,6 @@ const app_name = "crosswire";
 const release_flags = &[_][]const u8{
     "-DNDEBUG",
     "-std=c++20",
-    "-DFMT_EXCEPTIONS=0",
     "-DFMT_HEADER_ONLY",
     "-DTHELIB_OPT_T_LOGGING",
     // enable checks within optional before reset() and emplace() etc calls
@@ -16,6 +15,7 @@ const release_flags = &[_][]const u8{
     "-DTHELIB_RESULT_T_LOGGING",
     "-DTHELIB_SLICE_T_LOGGING",
     "-DTHELIB_ONE_OF_T_LOGGING",
+    "-DALLO_STACK_ALLOCATOR_USE_CTTI",
 };
 const debug_flags = &[_][]const u8{
     "-g",
@@ -24,7 +24,6 @@ const debug_flags = &[_][]const u8{
     "-DTHELIB_DEBUG",
     "-std=c++20",
     // enable exceptions in debug mode
-    "-DFMT_EXCEPTIONS=1",
     "-DFMT_HEADER_ONLY",
     "-DTHELIB_OPT_T_LOGGING",
     // enable checks within optional before reset() and emplace() etc calls
@@ -36,9 +35,11 @@ const debug_flags = &[_][]const u8{
     "-DTHELIB_RESULT_T_LOGGING",
     "-DTHELIB_SLICE_T_LOGGING",
     "-DTHELIB_ONE_OF_T_LOGGING",
+    "-DALLO_STACK_ALLOCATOR_USE_CTTI",
 };
 
 const testing_flags = &[_][]const u8{
+    "-DFMT_EXCEPTIONS=1",
     "-DTESTING",
     "-DTESTING_NOEXCEPT=",
     "-DTESTING_THELIB_OPT_T_NO_NOTHROW",
@@ -49,6 +50,9 @@ const testing_flags = &[_][]const u8{
 
 const non_testing_flags = &[_][]const u8{
     "-DTESTING_NOEXCEPT=noexcept",
+    "-DFMT_EXCEPTIONS=0",
+    "-fno-exceptions",
+    "-fno-rtti",
 };
 
 const zcc = @import("compile_commands");

@@ -163,6 +163,7 @@ requires(
     };
 
     inline explicit pool_allocator_generational_t(size_t reserved_spots)
+        TESTING_NOEXCEPT
         : m_items_buffer(init_buffer<typename decltype(m_items_buffer)::type>(
               reserved_spots == 0 ? 1 : reserved_spots)),
           m_activity_buffer(
@@ -170,7 +171,7 @@ requires(
                   reserved_spots == 0 ? 1 : reserved_spots)),
           m_generation_buffer(
               init_buffer<typename decltype(m_generation_buffer)::type>(
-                  reserved_spots == 0 ? 1 : reserved_spots)) TESTING_NOEXCEPT
+                  reserved_spots == 0 ? 1 : reserved_spots))
     {
         const size_t actual_reserved = reserved_spots == 0 ? 1 : reserved_spots;
         if constexpr (logging) {

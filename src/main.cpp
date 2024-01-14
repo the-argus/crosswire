@@ -80,7 +80,6 @@ int main()
     physics::cleanup();
     bullet::cleanup();
     resources::cleanup();
-    
     return 0;
 }
 
