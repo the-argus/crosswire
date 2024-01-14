@@ -7,12 +7,15 @@ namespace lib {
 class body_t : public ::cpBody
 {
   public:
-    enum class Type : uint8_t
+    enum class Type : int
     {
         DYNAMIC = ::CP_BODY_TYPE_DYNAMIC,
         KINEMATIC = ::CP_BODY_TYPE_KINEMATIC,
         STATIC = ::CP_BODY_TYPE_STATIC,
     };
+
+    static_assert(sizeof(Type::STATIC) == sizeof(::CP_BODY_TYPE_STATIC));
+
     body_t() = delete;
 
     struct body_options_t
@@ -21,6 +24,16 @@ class body_t : public ::cpBody
         float mass;
         float moment;
     };
+
+    static lib::body_t *from_chipmunk(cpBody *body) TESTING_NOEXCEPT
+    {
+        return reinterpret_cast<lib::body_t *>(body);
+    }
+
+    explicit inline constexpr body_t(const cpBody &original) TESTING_NOEXCEPT
+        : ::cpBody(original)
+    {
+    }
 
     inline body_t(const body_options_t &options) TESTING_NOEXCEPT : ::cpBody({})
     {
@@ -66,8 +79,10 @@ class body_t : public ::cpBody
         lib::vect_t point;
     };
 
-    void apply_impulse_at_local_point(const force_options_t &options) TESTING_NOEXCEPT;
-    void apply_impulse_at_world_point(const force_options_t &options) TESTING_NOEXCEPT;
+    void apply_impulse_at_local_point(const force_options_t &options)
+        TESTING_NOEXCEPT;
+    void apply_impulse_at_world_point(const force_options_t &options)
+        TESTING_NOEXCEPT;
 
     void free() TESTING_NOEXCEPT;
 
@@ -81,22 +96,22 @@ class body_t : public ::cpBody
         float damping;
     };
 
-    cpDampedSpring *
-    connect_with_damped_spring(cpDampedSpring *connection, body_t *other,
-                               vect_t point_on_this, vect_t point_on_other,
-                               const spring_options_t &options) TESTING_NOEXCEPT;
-    cpDampedSpring *
-    connect_with_damped_spring(cpDampedSpring *connection, body_t *other,
-                               const spring_options_t &options) TESTING_NOEXCEPT;
+    cpDampedSpring *connect_with_damped_spring(
+        cpDampedSpring *connection, body_t *other, vect_t point_on_this,
+        vect_t point_on_other,
+        const spring_options_t &options) TESTING_NOEXCEPT;
+    cpDampedSpring *connect_with_damped_spring(
+        cpDampedSpring *connection, body_t *other,
+        const spring_options_t &options) TESTING_NOEXCEPT;
 
     struct simple_motor_options_t
     {
         float rate;
     };
 
-    cpSimpleMotor *
-    connect_with_simple_motor(cpSimpleMotor *motor, body_t *other,
-                              const simple_motor_options_t &options) TESTING_NOEXCEPT;
+    cpSimpleMotor *connect_with_simple_motor(
+        cpSimpleMotor *motor, body_t *other,
+        const simple_motor_options_t &options) TESTING_NOEXCEPT;
 
     ///
     /// Remove this body from its internal space.

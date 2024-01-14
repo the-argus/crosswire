@@ -1,5 +1,6 @@
 #include "terrain.hpp"
 #include "physics.hpp"
+#include "physics_collision_types.hpp"
 #include "thelib/opt.hpp"
 #include <array>
 #include <vector>
@@ -43,6 +44,21 @@ void load_polygon(const game_id_e terrain_id,
         return;
     }
 
+    cpCollisionType collision_type;
+    // convert game id to collision type
+    switch (terrain_id) {
+    case game_id_e::Terrain_Ditch:
+        collision_type = (cpCollisionType)physics::collision_type_e::Ditch;
+        break;
+    case cw::game_id_e::Terrain_Obstacle:
+        collision_type = (cpCollisionType)physics::collision_type_e::Obstacle;
+        break;
+    default:
+        LN_WARN("Terrain polygon loaded with a type that is not ditch or "
+                "obstacle, not setting its collision type to anything.");
+        break;
+    }
+
     assert(terrain_id > game_id_e::INVALID_SECT_2_BEGIN);
     const uint8_t index =
         uint8_t(terrain_id) - uint8_t(game_id_e::INVALID_SECT_2_BEGIN) - 1;
@@ -52,14 +68,16 @@ void load_polygon(const game_id_e terrain_id,
         auto shape =
             physics::create_segment_shape(physics::get_static_body(), options);
         shapes_by_id.value()[index].push_back(shape);
-        set_physics_id(*physics::get_segment_shape(shape).parent_cast(),
-                       terrain_id);
+        auto &actual = physics::get_segment_shape(shape);
+        set_physics_id(*actual.parent_cast(), terrain_id);
     };
 
     if (vertices.size() == 2) {
         mksegment({
+            .collision_type = collision_type,
             .a = vertices.data()[0],
             .b = vertices.data()[1],
+            .radius = smoothing_radius,
         });
         return;
     }
@@ -70,6 +88,7 @@ void load_polygon(const game_id_e terrain_id,
             break;
         }
         lib::segment_shape_t::options_t options{
+            .collision_type = collision_type,
             .a = vect,
             .b = vertices.data()[i + 1],
             .radius = smoothing_radius,

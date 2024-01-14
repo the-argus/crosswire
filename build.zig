@@ -69,6 +69,7 @@ const cpp_sources = &[_][]const u8{
     "src/allo/random_allocation_registry.cpp",
     "src/allo/stack_allocator.cpp",
     "src/render_pipeline.cpp",
+    "src/bullet.cpp",
     "src/main.cpp",
     "src/globals.cpp",
     "src/input.cpp",
@@ -76,6 +77,8 @@ const cpp_sources = &[_][]const u8{
     "src/player.cpp",
     "src/terrain.cpp",
     "src/resources.cpp",
+    "src/build_site.cpp",
+    "src/wire.cpp",
 };
 
 const include_dirs = &[_][]const u8{

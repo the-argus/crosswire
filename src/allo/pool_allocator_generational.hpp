@@ -47,6 +47,7 @@ requires(
     ) class pool_allocator_generational_t
 {
   public:
+    using type = T;
     inline static constexpr pool_allocator_generational_options_t
         passed_options = options;
     static_assert(
@@ -130,6 +131,19 @@ requires(
         Okay,
         ResultReleased,
         OOM,
+    };
+
+    enum class get_handle_err_code_e : uint8_t
+    {
+        Okay,
+        ResultReleased,
+        Null,               // the pointer passed is null
+        ItemNoLongerValid,  // the item at the pointer is no longer valid
+        ItemNotInAllocator, // the item being pointed at is invalid because it
+                            // is outside the currently allocated space this
+                            // allocator is using
+        AllocationShrunk,   // item is within allocation but off the end. very
+                            // similar to ItemNoLongerValid
     };
 
     enum class lookup_return_code_e : uint8_t
@@ -224,6 +238,42 @@ requires(
         }
 
         return handle_t(selected_index, gen);
+    }
+
+    /// Reverse-engineer a handle from a pointer to an item.
+    [[nodiscard]] inline lib::result_t<handle_t, get_handle_err_code_e>
+    get_handle_from_item(const T *item) TESTING_NOEXCEPT
+    {
+        static_assert(alignof(T) ==
+                      alignof(decltype(m_items_buffer.data()[0])));
+        static_assert(sizeof(T) == sizeof(m_items_buffer.data()[0]));
+
+        if (item) [[likely]] {
+            if ((void *)item >= (void *)m_items_buffer.data() &&
+                (void *)item <
+                    (void *)(m_items_buffer.data() + m_items_buffer.size())) {
+
+                if ((void *)item >=
+                    (void *)(m_items_buffer.data() + m_end_guess)) {
+                    return get_handle_err_code_e::AllocationShrunk;
+                } else {
+                    T *begin = &m_items_buffer.data()->data;
+                    assert(((void *)begin) == ((void *)m_items_buffer.data()));
+                    assert(begin <= item);
+                    index_t index = item - begin;
+                    assert(index < m_activity_buffer.size());
+                    if (m_activity_buffer.data()[index]) {
+                        return handle_t(index,
+                                        m_generation_buffer.data()[index]);
+                    } else {
+                        return get_handle_err_code_e::ItemNoLongerValid;
+                    }
+                }
+            }
+            return get_handle_err_code_e::ItemNotInAllocator;
+        } else {
+            return get_handle_err_code_e::Null;
+        }
     }
 
     /// Attempt to get an item in the allocator with a generational handle.

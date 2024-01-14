@@ -1,8 +1,10 @@
 #pragma once
 #include "allo/pool_allocator_generational.hpp"
 #include "game_ids.hpp"
+#include "physics_collision_types.hpp"
 #include "root_allocator.hpp"
 #include "thelib/body.hpp"
+#include "thelib/opt.hpp"
 #include "thelib/shape.hpp"
 #include <cstddef>
 
@@ -76,6 +78,21 @@ void update(float timestep) noexcept;
 /// amounts with the beginFunc.
 void add_collision_handler(const cpCollisionHandler &handler) noexcept;
 
+struct collision_handler_wildcard_options_t
+{
+    const collision_type_e typeA;
+    cpCollisionBeginFunc beginFunc;
+    cpCollisionPreSolveFunc preSolveFunc;
+    cpCollisionPostSolveFunc postSolveFunc;
+    cpCollisionSeparateFunc separateFunc;
+    cpDataPointer userData;
+};
+
+/// Same as regular collision handler, but there is no typeB: instead, it
+/// provides handler calls whenever anything of typeA hits *anything* else.
+void add_collision_handler_wildcard(
+    const collision_handler_wildcard_options_t &options) noexcept;
+
 /// Create a physics body and return a handle to it.
 raw_body_t create_body(game_id_e id,
                        const lib::body_t::body_options_t &options) noexcept;
@@ -91,11 +108,53 @@ raw_poly_shape_t create_box_shape(const raw_body_t &body_handle, const lib::poly
 raw_poly_shape_t create_polygon_shape(const raw_body_t &body_handle, const lib::poly_shape_t::default_options_t &options) noexcept;
 // clang-format on
 
+/// Alternative to set_physics_id which is slower but lets you also pass in a
+/// pointer to something.
+/// TODO: make this free existing user data and id. right now assigning multiple
+/// times causes a memory leak.
+void set_user_data_and_id(raw_body_t handle, game_id_e id, void *data) noexcept;
+void set_user_data_and_id(raw_poly_shape_t handle, game_id_e id,
+                          void *data) noexcept;
+void set_user_data_and_id(raw_segment_shape_t handle, game_id_e id,
+                          void *data) noexcept;
+/// returns the ID of the object, unless it was not set with set_physics_id() or
+/// physics::set_user_data_and_id().
+lib::opt_t<game_id_e> get_id(raw_body_t handle) noexcept;
+lib::opt_t<game_id_e> get_id(const lib::body_t &body) noexcept;
+lib::opt_t<game_id_e> get_id(raw_segment_shape_t handle) noexcept;
+lib::opt_t<game_id_e> get_id(raw_poly_shape_t handle) noexcept;
+lib::opt_t<game_id_e> get_id(const lib::shape_t &shape) noexcept;
+/// returns the ID of the object, unless it was not set with
+/// physics::set_user_data_and_id(). guaranteed to not return a null pointer.
+lib::opt_t<void *> get_user_data(raw_body_t handle) noexcept;
+lib::opt_t<void *> get_user_data(const lib::body_t &body) noexcept;
+lib::opt_t<void *> get_user_data(raw_poly_shape_t handle) noexcept;
+lib::opt_t<void *> get_user_data(raw_segment_shape_t handle) noexcept;
+lib::opt_t<void *> get_user_data(const lib::shape_t &shape) noexcept;
+
+/// Delete a segment shape. Also deletes any user data that may be attached.
 void delete_segment_shape(raw_segment_shape_t) noexcept;
+/// Delete a polygon shape. Also deletes any user data that may be attached.
 void delete_polygon_shape(raw_poly_shape_t) noexcept;
+/// Delete a physics body. Also deletes any user data that may be attached.
 void delete_body(raw_body_t) noexcept;
 
 void debug_draw_all_shapes() noexcept;
+
+/// Return a handle for an existing body. useful if you got the body from a
+/// collision handler and need to be able to address it with physics functions
+/// like get_id.
+raw_body_t get_handle_from_body(const lib::body_t &) noexcept;
+/// Return a handle for an existing segment shape. useful if you got the segment
+/// shape from a collision handler and need to be able to address it with
+/// physics functions like get_id.
+raw_segment_shape_t
+get_handle_from_segment_shape(const lib::segment_shape_t &) noexcept;
+/// Return a handle for an existing polygon shape. useful if you got the polygon
+/// shape from a collision handler and need to be able to address it with
+/// physics functions like get_id.
+raw_poly_shape_t
+get_handle_from_polygon_shape(const lib::poly_shape_t &) noexcept;
 
 lib::body_t &get_body(raw_body_t) noexcept;
 lib::segment_shape_t &get_segment_shape(raw_segment_shape_t) noexcept;
