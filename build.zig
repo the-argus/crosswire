@@ -247,7 +247,7 @@ pub fn build(b: *std.Build) !void {
     {
         const editor_dep = b.dependency("editor", .{ .target = target, .optimize = mode });
         const editor_artifact = editor_dep.artifact("crosswire_editor");
-        editor_artifact.addIncludePath(.{ .path = "levels/editor_include/" });
+        editor_artifact.addIncludePath(.{ .path = try b.build_root.join(b.allocator, &.{"levels/editor_include/"}) });
         const run_cmd = b.addRunArtifact(editor_artifact);
         run_cmd.step.dependOn(editor_dep.builder.getInstallStep());
         const editor_step = b.step("editor", "Run the level editor");
