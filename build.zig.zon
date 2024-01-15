@@ -4,8 +4,8 @@
 
     .dependencies = .{
         .editor = .{
-            .url = "https://github.com/the-argus/crosswire-editor/archive/1e41c594ae47d29ebd5bcec55b43efef2ee9a0f4.tar.gz",
-            .hash = "12209d81344daa71fd8109682c7b4583ec7d12344976214e5974cc466f4c811e8045",
+            .url = "https://github.com/the-argus/crosswire-editor/archive/0ee4a7b5861a00c68c19008e676cbc8394dc2731.tar.gz",
+            .hash = "12200166a0009ef6c8ba5a466bec418e2bf11e4342b0fcbd31baf1d8a1aa3fee7075",
         },
         .raylib = .{
             .url = "https://github.com/raysan5/raylib/archive/e7664d5684f4b7c487d2a08645f23a1d0485f9e7.tar.gz",
