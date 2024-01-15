@@ -17,6 +17,7 @@ enum class game_id_e : uint8_t
     Player,
     Bullet,
     Build_Site,
+    Turret,
     INVALID_SECT_1_END, // -----------------------------------------------------
 
     // clang-format off

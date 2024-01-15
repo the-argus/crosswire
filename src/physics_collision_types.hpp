@@ -10,6 +10,7 @@ enum class collision_type_e : cpCollisionType
     Obstacle,
     BuildSite,
     Bullet,
+    Turret,
 
     // this one should always be last
     MAX,

@@ -30,6 +30,7 @@ enum class AllocationType
     /// Just for crosswire
     Bullets,
     Physics,
+    Turret,
 
     /// maximum enum value, also should never be used
     Max,

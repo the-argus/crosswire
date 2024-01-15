@@ -26,6 +26,9 @@ void load_level(const char *levelname) noexcept
         sites.emplace_back(lib::vect_t{site.position_b.x, site.position_b.y});
     }
 
+    // clear existing terrain
+    terrain::clear_level();
+
     for (const auto &entry : level.terrains) {
         game_id_e id;
         switch (entry.type) {
