@@ -2,10 +2,8 @@
 #include <emscripten/emscripten.h>
 #endif
 #include "build_site.hpp"
-#include "thelib/vect.hpp"
 #include "bullet.hpp"
 #include "constants/screen.hpp"
-#include "debug_level.hpp"
 #include "globals.hpp"
 #include "input.hpp"
 #include "natural_log/natural_log.hpp"
@@ -64,8 +62,6 @@ int main()
     });
 
     {
-        load_debug_level();
-
 #ifdef __EMSCRIPTEN__
         emscripten_set_main_loop(update, 0, 1);
 #else
