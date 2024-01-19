@@ -30,6 +30,12 @@ class body_t : public ::cpBody
         return reinterpret_cast<lib::body_t *>(body);
     }
 
+    static const lib::body_t *
+    from_chipmunk_const(const cpBody *body) TESTING_NOEXCEPT
+    {
+        return reinterpret_cast<const lib::body_t *>(body);
+    }
+
     explicit inline constexpr body_t(const cpBody &original) TESTING_NOEXCEPT
         : ::cpBody(original)
     {

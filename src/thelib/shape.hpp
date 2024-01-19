@@ -21,6 +21,17 @@ class shape_t : public ::cpShape
     {
     }
 
+    static lib::shape_t *from_chipmunk(cpShape *body) TESTING_NOEXCEPT
+    {
+        return reinterpret_cast<lib::shape_t *>(body);
+    }
+
+    static const lib::shape_t *
+    from_chipmunk_const(const cpShape *body) TESTING_NOEXCEPT
+    {
+        return reinterpret_cast<const lib::shape_t *>(body);
+    }
+
     [[nodiscard]] float friction() TESTING_NOEXCEPT;
     void set_friction(float friction) TESTING_NOEXCEPT;
     [[nodiscard]] bool sensor() TESTING_NOEXCEPT;
