@@ -1,7 +1,7 @@
 #pragma once
 #include "chipmunk/chipmunk_structs.h"
-#include "thelib/shape.hpp"
-#include "thelib/vect.hpp"
+#include "shape.hpp"
+#include "vect.hpp"
 
 namespace lib {
 class body_t : public ::cpBody

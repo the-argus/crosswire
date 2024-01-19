@@ -1,7 +1,7 @@
 #pragma once
 #include "chipmunk/cpBB.h"
 #include "raylib.h"
-#include "thelib/vect.hpp"
+#include "vect.hpp"
 
 namespace lib {
 struct rect_t : public ::Rectangle

@@ -1,8 +1,8 @@
 #pragma once
 #include "chipmunk/chipmunk.h"
-#include "thelib/rect.hpp"
-#include "thelib/slice.hpp"
-#include "thelib/vect.hpp"
+#include "rect.hpp"
+#include "slice.hpp"
+#include "vect.hpp"
 #include <chipmunk/chipmunk_structs.h>
 
 namespace lib {

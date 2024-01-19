@@ -1,9 +1,9 @@
 #pragma once
+#include "body.hpp"
 #include "natural_log/natural_log.hpp"
+#include "shape.hpp"
 #include "testing/abort.hpp"
-#include "thelib/body.hpp"
-#include "thelib/shape.hpp"
-#include "thelib/vect.hpp"
+#include "vect.hpp"
 #include <chipmunk/chipmunk_structs.h>
 
 namespace lib {

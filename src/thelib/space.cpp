@@ -1,10 +1,16 @@
-#include "thelib/space.hpp"
+#include "space.hpp"
 #include <cassert>
 
 namespace lib {
 void space_t::add(body_t &body) TESTING_NOEXCEPT { body._add_to_space(this); }
-void space_t::add(shape_t &shape) TESTING_NOEXCEPT { shape._add_to_space(this); }
-void space_t::remove(body_t &body) TESTING_NOEXCEPT { cpSpaceRemoveBody(this, &body); }
+void space_t::add(shape_t &shape) TESTING_NOEXCEPT
+{
+    shape._add_to_space(this);
+}
+void space_t::remove(body_t &body) TESTING_NOEXCEPT
+{
+    cpSpaceRemoveBody(this, &body);
+}
 void space_t::remove(shape_t &shape) TESTING_NOEXCEPT
 {
     cpSpaceRemoveShape(this, &shape);
@@ -17,12 +23,18 @@ void space_t::remove(cpDampedSpring &constraint) TESTING_NOEXCEPT
 {
     remove(*(cpConstraint *)&constraint);
 }
-float space_t::damping() const TESTING_NOEXCEPT { return cpSpaceGetDamping(this); }
+float space_t::damping() const TESTING_NOEXCEPT
+{
+    return cpSpaceGetDamping(this);
+}
 void space_t::set_damping(float damping) TESTING_NOEXCEPT
 {
     cpSpaceSetDamping(this, damping);
 }
-vect_t space_t::gravity() const TESTING_NOEXCEPT { return cpSpaceGetGravity(this); }
+vect_t space_t::gravity() const TESTING_NOEXCEPT
+{
+    return cpSpaceGetGravity(this);
+}
 void space_t::set_gravity(vect_t gravity) TESTING_NOEXCEPT
 {
     cpSpaceSetGravity(this, gravity);
@@ -31,7 +43,8 @@ cpTimestamp space_t::collision_persistence() const TESTING_NOEXCEPT
 {
     return cpSpaceGetCollisionPersistence(this);
 }
-void space_t::set_collision_persistence(cpTimestamp persistence) TESTING_NOEXCEPT
+void space_t::set_collision_persistence(cpTimestamp persistence)
+    TESTING_NOEXCEPT
 {
     cpSpaceSetCollisionPersistence(this, persistence);
 }
@@ -67,7 +80,10 @@ float space_t::idle_speed_threshold() const TESTING_NOEXCEPT
 {
     return cpSpaceGetIdleSpeedThreshold(this);
 }
-int space_t::iterations() const TESTING_NOEXCEPT { return cpSpaceGetIterations(this); }
+int space_t::iterations() const TESTING_NOEXCEPT
+{
+    return cpSpaceGetIterations(this);
+}
 void space_t::set_iterations(int iterations) TESTING_NOEXCEPT
 {
     cpSpaceSetIterations(this, iterations);
@@ -87,5 +103,8 @@ float space_t::get_current_time_step() const TESTING_NOEXCEPT
     return cpSpaceGetCurrentTimeStep(this);
 }
 
-void space_t::step(float timestep) TESTING_NOEXCEPT { cpSpaceStep(this, timestep); }
+void space_t::step(float timestep) TESTING_NOEXCEPT
+{
+    cpSpaceStep(this, timestep);
+}
 } // namespace lib
