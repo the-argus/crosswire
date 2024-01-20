@@ -1,4 +1,5 @@
 #pragma once
+#include "allo/ctti/typename.hpp"
 #include "allo/pool_allocator_generational.hpp"
 #include "game_ids.hpp"
 #include "physics_collision_types.hpp"
@@ -77,15 +78,25 @@ raw_poly_shape_t create_box_shape(const raw_body_t &body_handle, const lib::poly
 raw_poly_shape_t create_polygon_shape(const raw_body_t &body_handle, const lib::poly_shape_t::default_options_t &options) noexcept;
 // clang-format on
 
+void set_user_data_and_id_raw(raw_body_t handle, game_id_e id, void *data,
+                              size_t typehash) noexcept;
+void set_user_data_and_id_raw(raw_poly_shape_t handle, game_id_e id, void *data,
+                              size_t typehash) noexcept;
+void set_user_data_and_id_raw(raw_segment_shape_t handle, game_id_e id,
+                              void *data, size_t typehash) noexcept;
+
 /// Alternative to set_physics_id which is slower but lets you also pass in a
 /// pointer to something.
 /// TODO: make this free existing user data and id. right now assigning multiple
 /// times causes a memory leak.
-void set_user_data_and_id(raw_body_t handle, game_id_e id, void *data) noexcept;
-void set_user_data_and_id(raw_poly_shape_t handle, game_id_e id,
-                          void *data) noexcept;
-void set_user_data_and_id(raw_segment_shape_t handle, game_id_e id,
-                          void *data) noexcept;
+template <typename handle_t, typename user_data_pointer_t>
+inline constexpr void set_user_data_and_id(handle_t handle, game_id_e id,
+                                           user_data_pointer_t *data) noexcept
+{
+    set_user_data_and_id_raw(handle, id, reinterpret_cast<void *>(data),
+                             allo::ctti::nameof<user_data_pointer_t>().hash());
+}
+
 /// returns the ID of the object, unless it was not set with set_physics_id() or
 /// physics::set_user_data_and_id().
 lib::opt_t<game_id_e> get_id(raw_body_t handle) noexcept;
@@ -93,13 +104,30 @@ lib::opt_t<game_id_e> get_id(const lib::body_t &body) noexcept;
 lib::opt_t<game_id_e> get_id(raw_segment_shape_t handle) noexcept;
 lib::opt_t<game_id_e> get_id(raw_poly_shape_t handle) noexcept;
 lib::opt_t<game_id_e> get_id(const lib::shape_t &shape) noexcept;
-/// returns the ID of the object, unless it was not set with
-/// physics::set_user_data_and_id(). guaranteed to not return a null pointer.
-lib::opt_t<void *> get_user_data(raw_body_t handle) noexcept;
-lib::opt_t<void *> get_user_data(const lib::body_t &body) noexcept;
-lib::opt_t<void *> get_user_data(raw_poly_shape_t handle) noexcept;
-lib::opt_t<void *> get_user_data(raw_segment_shape_t handle) noexcept;
-lib::opt_t<void *> get_user_data(const lib::shape_t &shape) noexcept;
+
+lib::opt_t<void *> get_user_data_raw(raw_body_t handle,
+                                     size_t typehash) noexcept;
+lib::opt_t<void *> get_user_data_raw(const lib::body_t &body,
+                                     size_t typehash) noexcept;
+lib::opt_t<void *> get_user_data_raw(raw_poly_shape_t handle,
+                                     size_t typehash) noexcept;
+lib::opt_t<void *> get_user_data_raw(raw_segment_shape_t handle,
+                                     size_t typehash) noexcept;
+lib::opt_t<void *> get_user_data_raw(const lib::shape_t &shape,
+                                     size_t typehash) noexcept;
+
+template <typename user_data_t, typename input_t>
+inline constexpr lib::opt_t<user_data_t *>
+get_user_data(const input_t &shape_or_handle) noexcept
+{
+    auto mdata = get_user_data_raw(shape_or_handle,
+                                   allo::ctti::nameof<user_data_t>().hash());
+    if (mdata) {
+        return reinterpret_cast<user_data_t *>(mdata.value());
+    } else {
+        return {};
+    }
+}
 
 /// Delete a segment shape. Also deletes any user data that may be attached.
 void delete_segment_shape(raw_segment_shape_t) noexcept;
@@ -125,6 +153,9 @@ get_handle_from_segment_shape(const lib::segment_shape_t &) noexcept;
 raw_poly_shape_t
 get_handle_from_polygon_shape(const lib::poly_shape_t &) noexcept;
 
+/// Return a handle for an existing shape of an unknown type. You can check
+/// which type was returned by doing
+/// std::holds_alternative<raw_poly_shape_t>(...) on the result.
 std::variant<raw_poly_shape_t, raw_segment_shape_t>
 get_handle_from_shape(const lib::shape_t &) noexcept;
 

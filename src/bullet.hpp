@@ -49,7 +49,12 @@ struct bullet_t
     physics::raw_poly_shape_t shape;
     /// Get the position of this bullet
     [[nodiscard]] lib::vect_t position() const noexcept;
-    [[nodiscard]] lib::opt_t<void *> user_data() const noexcept;
+
+    template <typename T>
+    [[nodiscard]] inline constexpr lib::opt_t<T *> user_data() const noexcept
+    {
+        return physics::get_user_data<T>(body);
+    }
 
     /// Do not use this constructor unless you know what you're doing
     explicit bullet_t(const bullet_creation_options_t &) noexcept;

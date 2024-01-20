@@ -107,80 +107,51 @@ void player_t::collision_handler_static(lib::arbiter_t &arb,
     if (!IsKeyDown(KEY_SPACE))
         return;
 
-    // If colliding with a body whose ID is build_site and player presses a
-    // button and that build site is not attached to wire
-    auto shape_a_handleres = physics::get_handle_from_shape(arb.shape_a());
-    auto shape_b_handleres = physics::get_handle_from_shape(arb.shape_b());
-    if (!std::holds_alternative<physics::raw_poly_shape_t>(shape_a_handleres)) {
-        LN_WARN("Shape A (player) of player collision is not a polygon shape. "
-                "Aborting handler");
-        return;
-    }
-    if (!std::holds_alternative<physics::raw_segment_shape_t>(
-            shape_b_handleres)) {
-        LN_WARN("Shape B (non-player) of player collision is not a segement "
-                "shape. Aborting handler");
-        return;
-    }
+    auto *player = (player_t *)userData;
 
-    auto shape_a = std::get<physics::raw_poly_shape_t>(shape_a_handleres);
-    auto shape_b = std::get<physics::raw_segment_shape_t>(shape_b_handleres);
-    auto maybe_other_id_a = physics::get_id(shape_a);
-    auto maybe_other_id_b = physics::get_id(shape_b);
+    auto checkshape = [player](const lib::shape_t &shape) {
+        auto maybe_id = physics::get_id(shape);
 
-    if (maybe_other_id_a.has_value() &&
-        maybe_other_id_a.value() == game_id_e::Build_Site &&
-        ((build_site_t *)(physics::get_user_data(shape_a).value()))
-                ->get_state() == 0) {
-        // If player is not holding wire
-        if (!((player_t *)(userData))->holding_wire) {
-            // attach wire to that build site
-            if (auto data = physics::get_user_data(shape_a)) {
-                ((player_t *)(userData))
-                    ->wire.start_wire((*(build_site_t *)(data.value())));
-                ((player_t *)(userData))->holding_wire = true;
-            }
-            // the player will now be holding their wire which is connected to
-            // the build site
-        } else if (((player_t *)(userData))
-                       ->wire
-                       .check_wire_validity()) { // If player is holding wire
-                                                 // and the wire is not tangled
-            // both build sites the wire connects to shall be marked as complete
-            ((player_t *)(userData))
-                ->wire.end_wire((*(
-                    build_site_t *)(physics::get_user_data(shape_a).value())));
-            ((player_t *)(userData))->holding_wire = false;
+        // make sure its a build site
+        if (!maybe_id.has_value() ||
+            maybe_id.value() != game_id_e::Build_Site) {
+            return;
         }
-    }
 
-    // the code is gonna be gross cuz either shapea or shapeb can be the player
-    // (these 2 sets of if statements can definitely be combined)
-    if (maybe_other_id_b.has_value() &&
-        maybe_other_id_b.value() == game_id_e::Build_Site &&
-        ((build_site_t *)(physics::get_user_data(shape_b).value()))
-                ->get_state() == 0) {
-        // If player is not holding wire
-        if (!((player_t *)(userData))->holding_wire) {
+        // make sure it had a ptr to the actual build site stored inside it
+        auto maybe_site = physics::get_user_data<build_site_t>(shape);
+        if (!maybe_site)
+            return;
+
+        // make sure the site is in state 0, otherwise you cant start a wire on
+        // it
+        build_site_t *site = maybe_site.value();
+        if (site->get_state() != 0) {
+			LN_DEBUG_FMT("attempt to press space on wire with state {}", site->get_state());
+            return;
+		}
+
+        if (!player->holding_wire) {
+			LN_DEBUG("player not holding wire but it pressed space on a build site");
             // attach wire to that build site
-            if (auto data = physics::get_user_data(shape_b)) {
-                ((player_t *)(userData))
-                    ->wire.start_wire((*(build_site_t *)(data.value())));
-                ((player_t *)(userData))->holding_wire = true;
-            }
-            // the player will now be holding their wire which is connected to
-            // the build site
-        } else if (((player_t *)(userData))
-                       ->wire
-                       .check_wire_validity()) { // If player is holding wire
-                                                 // and the wire is not tangled
-            // both build sites the wire connects to shall be marked as complete
-            ((player_t *)(userData))
-                ->wire.end_wire((*(
-                    build_site_t *)(physics::get_user_data(shape_b).value())));
-            ((player_t *)(userData))->holding_wire = false;
-        }
-    }
+            player->wire.start_wire(*site);
+            player->holding_wire = true;
+            // the player will now be holding their wire which is
+            // connected to the build site
+        } else if (player->wire.check_wire_validity()) {
+			LN_DEBUG("player holding wire and it is valid");
+            // If player is holding wire and the wire is not tangled
+            // both build sites the wire connects to shall be marked
+            // as complete
+            player->wire.end_wire(*site);
+            player->holding_wire = false;
+        } else {
+			LN_DEBUG("player holding wire and it is NOT valid");
+		}
+    };
+
+    checkshape(arb.shape_a());
+    checkshape(arb.shape_b());
 }
 
 } // namespace cw

@@ -1,13 +1,12 @@
 #pragma once
 
-#include <cstdint>
+#include <cstddef>
 
 /// Simple compile time utility functions
 
 namespace allo::ctti::detail {
 
-template <typename T, std::size_t N>
-constexpr const T *begin(const T (&array)[N])
+template <typename T, size_t N> constexpr const T *begin(const T (&array)[N])
 {
     return &array[0];
 }
