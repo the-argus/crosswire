@@ -15,12 +15,10 @@ class arbiter_t : public ::cpArbiter
 
     [[nodiscard]] const body_t &body_a_const() const TESTING_NOEXCEPT;
     [[nodiscard]] const body_t &body_b_const() const TESTING_NOEXCEPT;
-    [[nodiscard]] const shape_t &shape_a_const() const TESTING_NOEXCEPT;
-    [[nodiscard]] const shape_t &shape_b_const() const TESTING_NOEXCEPT;
+    [[nodiscard]] const shape_t &shape_a() const TESTING_NOEXCEPT;
+    [[nodiscard]] const shape_t &shape_b() const TESTING_NOEXCEPT;
     [[nodiscard]] body_t &body_a() TESTING_NOEXCEPT;
     [[nodiscard]] body_t &body_b() TESTING_NOEXCEPT;
-    [[nodiscard]] shape_t &shape_a() TESTING_NOEXCEPT;
-    [[nodiscard]] shape_t &shape_b() TESTING_NOEXCEPT;
 
     /// The buffer of memory containing contact points owned by this arbiter.
     /// Returns null if no contacts are present, ie. size() == 0.

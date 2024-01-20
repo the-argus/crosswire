@@ -12,9 +12,11 @@ class contact_t : public ::cpContact
     [[nodiscard]] vect_t difference() const TESTING_NOEXCEPT;
 
     /// Get the points of contact for both bodies. These are in the same
-    /// coordinate space but it is relative to the collision (TODO: figure out
-    /// what these are relative to lol)
-    [[nodiscard]] std::pair<vect_t, vect_t> points() const TESTING_NOEXCEPT;
+    /// coordinate space: relative to the collision.
+    [[nodiscard]] std::pair<vect_t, vect_t> rel_points() const TESTING_NOEXCEPT;
+    /// Get the points of contact for both bodies. These are both in worldspace
+    [[nodiscard]] std::pair<vect_t, vect_t>
+    points(const arbiter_t &arb) const TESTING_NOEXCEPT;
     /// Get the first point of contact, NOT in worldspace
     [[nodiscard]] vect_t rel_point_one() const TESTING_NOEXCEPT;
     /// Get the second point of contact, NOT in worldspace

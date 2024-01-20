@@ -1,21 +1,39 @@
 #include "arbiter.hpp"
 namespace lib {
 
-body_t &arbiter_t::body_a() const TESTING_NOEXCEPT
+const body_t &arbiter_t::body_a_const() const TESTING_NOEXCEPT
 {
-    return *body_t::from_chipmunk(static_cast<const cpArbiter *>(this)->body_a);
+    return *body_t::from_chipmunk_const(
+        static_cast<const cpArbiter *>(this)->body_a);
 }
 
-body_t &arbiter_t::body_b() const TESTING_NOEXCEPT
+const body_t &arbiter_t::body_b_const() const TESTING_NOEXCEPT
 {
-    return *body_t::from_chipmunk(static_cast<const cpArbiter *>(this)->body_b);
+    return *body_t::from_chipmunk_const(
+        static_cast<const cpArbiter *>(this)->body_b);
 }
 
-shape_t &arbiter_t::shape_a() const TESTING_NOEXCEPT {
-    return *shape_t::from_chipmunk(static_cast<const cpArbiter *>(this)->a);
+const shape_t &arbiter_t::shape_a() const TESTING_NOEXCEPT
+{
+    return *shape_t::from_chipmunk_const(
+        static_cast<const cpArbiter *>(this)->a);
 }
 
-shape_t &arbiter_t::shape_b() const TESTING_NOEXCEPT;
+const shape_t &arbiter_t::shape_b() const TESTING_NOEXCEPT
+{
+    return *shape_t::from_chipmunk_const(
+        static_cast<const cpArbiter *>(this)->a);
+}
+
+body_t &arbiter_t::body_a() TESTING_NOEXCEPT
+{
+    return *body_t::from_chipmunk(static_cast<cpArbiter *>(this)->body_a);
+}
+
+body_t &arbiter_t::body_b() TESTING_NOEXCEPT
+{
+    return *body_t::from_chipmunk(static_cast<cpArbiter *>(this)->body_b);
+}
 
 contact_t *arbiter_t::data() TESTING_NOEXCEPT
 {
