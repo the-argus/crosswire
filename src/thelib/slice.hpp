@@ -34,16 +34,26 @@ template <typename T> class slice_t
   public:
     using type = T;
 
-    struct Iterator;
+    struct iterator;
+    struct const_iterator;
 
     // make an iterable container
-    inline constexpr Iterator begin() TESTING_NOEXCEPT
+    inline constexpr iterator begin() TESTING_NOEXCEPT
     {
-        return Iterator(m_data);
+        return iterator(m_data);
     }
-    inline constexpr Iterator end() TESTING_NOEXCEPT
+    inline constexpr iterator end() TESTING_NOEXCEPT
     {
-        return Iterator(m_data + m_elements);
+        return iterator(m_data + m_elements);
+    }
+
+    inline constexpr const_iterator begin() const TESTING_NOEXCEPT
+    {
+        return const_iterator(m_data);
+    }
+    inline constexpr const_iterator end() const TESTING_NOEXCEPT
+    {
+        return const_iterator(m_data + m_elements);
     }
 
     // raw access to contents
@@ -99,7 +109,7 @@ template <typename T> class slice_t
 
     /// The slice's iterator is the majority of the class. It is only a forwards
     /// iterator for simplicities sake (I really never iterate in any other way)
-    struct Iterator
+    struct iterator
     {
         using iterator_category = std::forward_iterator_tag;
         using difference_type = std::ptrdiff_t;
@@ -107,7 +117,7 @@ template <typename T> class slice_t
         using pointer = value_type *;
         using reference = value_type &;
 
-        inline constexpr Iterator(pointer ptr) TESTING_NOEXCEPT : m_ptr(ptr) {}
+        inline constexpr iterator(pointer ptr) TESTING_NOEXCEPT : m_ptr(ptr) {}
 
         inline constexpr reference operator*() const TESTING_NOEXCEPT
         {
@@ -117,7 +127,7 @@ template <typename T> class slice_t
         inline constexpr pointer operator->() TESTING_NOEXCEPT { return m_ptr; }
 
         // Prefix increment
-        inline constexpr Iterator &operator++() TESTING_NOEXCEPT
+        inline constexpr iterator &operator++() TESTING_NOEXCEPT
         {
             ++m_ptr;
             return *this;
@@ -125,30 +135,90 @@ template <typename T> class slice_t
 
         // Postfix increment
         // NOLINTNEXTLINE
-        inline constexpr Iterator operator++(int) TESTING_NOEXCEPT
+        inline constexpr iterator operator++(int) TESTING_NOEXCEPT
         {
-            Iterator tmp = *this;
+            iterator tmp = *this;
             ++(*this);
             return tmp;
         }
 
         inline constexpr friend bool
-        operator==(const Iterator &a, const Iterator &b) TESTING_NOEXCEPT
+        operator==(const iterator &a, const iterator &b) TESTING_NOEXCEPT
         {
             return a.m_ptr == b.m_ptr;
         };
         inline constexpr friend bool
-        operator!=(const Iterator &a, const Iterator &b) TESTING_NOEXCEPT
+        operator!=(const iterator &a, const iterator &b) TESTING_NOEXCEPT
         {
             return a.m_ptr != b.m_ptr;
         };
 
         // iterator can be compared against pointer
         inline constexpr auto
-        operator<=>(const Iterator &) const TESTING_NOEXCEPT = default;
+        operator<=>(const iterator &) const TESTING_NOEXCEPT = default;
 
         // TODO: implement this (ran into template deducible type problems)
-        friend struct fmt::formatter<Iterator>;
+        friend struct fmt::formatter<iterator>;
+
+      private:
+        pointer m_ptr;
+    };
+
+    struct const_iterator
+    {
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type = std::ptrdiff_t;
+        using value_type = const T;
+        using pointer = const value_type *;
+        using reference = const value_type &;
+
+        inline constexpr const_iterator(pointer ptr) TESTING_NOEXCEPT
+            : m_ptr(ptr)
+        {
+        }
+
+        inline constexpr reference operator*() const TESTING_NOEXCEPT
+        {
+            return *m_ptr;
+        }
+
+        inline constexpr pointer operator->() TESTING_NOEXCEPT { return m_ptr; }
+
+        // Prefix increment
+        inline constexpr const_iterator &operator++() TESTING_NOEXCEPT
+        {
+            ++m_ptr;
+            return *this;
+        }
+
+        // Postfix increment
+        // NOLINTNEXTLINE
+        inline constexpr const_iterator operator++(int) TESTING_NOEXCEPT
+        {
+            const_iterator tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+
+        inline constexpr friend bool
+        operator==(const const_iterator &a,
+                   const const_iterator &b) TESTING_NOEXCEPT
+        {
+            return a.m_ptr == b.m_ptr;
+        };
+        inline constexpr friend bool
+        operator!=(const const_iterator &a,
+                   const const_iterator &b) TESTING_NOEXCEPT
+        {
+            return a.m_ptr != b.m_ptr;
+        };
+
+        // iterator can be compared against pointer
+        inline constexpr auto
+        operator<=>(const const_iterator &) const TESTING_NOEXCEPT = default;
+
+        // TODO: implement this (ran into template deducible type problems)
+        friend struct fmt::formatter<const_iterator>;
 
       private:
         pointer m_ptr;

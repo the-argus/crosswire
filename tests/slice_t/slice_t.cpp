@@ -72,6 +72,27 @@ TEST_SUITE("vect_t")
             }
         }
 
+        SUBCASE("const iteration")
+        {
+            std::array<uint8_t, 128> mem;
+            std::fill(mem.begin(), mem.end(), 0);
+            const slice_t<uint8_t> slice(mem);
+
+            uint8_t index = 0;
+            for (const auto &byte : slice) {
+                REQUIRE(byte == 0);
+                mem[index] = index;
+                ++index;
+            }
+
+            // make sure that also changed slice
+            index = 0;
+            for (const auto &byte : slice) {
+                REQUIRE(byte == index);
+                ++index;
+            }
+        }
+
         SUBCASE("subslice construction")
         {
             std::array<uint8_t, 128> mem;
