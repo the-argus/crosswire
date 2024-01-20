@@ -3,9 +3,9 @@
 #include "game_ids.hpp"
 #include "globals.hpp"
 #include "physics.hpp"
+#include "physics_collision_types.hpp"
 #include "thelib/rect.hpp"
 #include "thelib/shape.hpp"
-#include "physics_collision_types.hpp"
 #include <memory>
 #include <raylib.h>
 
@@ -19,24 +19,26 @@ player_t::player_t() noexcept
                                 })),
       shape(physics::create_box_shape(
           body, {
-                    .collision_type = (cpCollisionType)physics::collision_type_e::Player,
+                    .collision_type = physics::collision_type_e::Player,
                     .bounding = lib::rect_t({0, 0}, {bounding_box_size}),
                     .radius = 1,
                 }))
 {
-    // add a collision handler to keep track of when player is colliding with a static body
-    physics::add_collision_handler_wildcard({
-        .typeA = physics::collision_type_e::Player,
-        .beginFunc = nullptr,
-        .preSolveFunc = nullptr,
-        .postSolveFunc = collision_handler_static,
-        .separateFunc = nullptr,
-        .userData = this
-    });
+    physics::get_space().add_collision_handler(
+        lib::collision_handler_t<lib::compile_time_collision_handler_info_t{
+            .begin_func = nullptr,
+            .pre_solve_func = nullptr,
+            .post_solve_func = collision_handler_static,
+            .separate_func = nullptr,
+        }>{
+            .type_a = physics::collision_type_e::Player,
+            .user_data = this,
+        });
 
     set_physics_id(physics::get_body(body), game_id_e::Player);
 }
-player_t::~player_t() {
+player_t::~player_t()
+{
     physics::delete_body(body);
     physics::delete_polygon_shape(shape);
 }
@@ -80,14 +82,12 @@ void player_t::update()
         velocity /= 2;
     }
 
-
     physics::get_body(body).set_velocity(velocity);
 
     // orient the body to the dir of the velocity
 
     // get the players position
     lib::vect_t pos = physics::get_body(body).position();
-
 
     if (IsKeyPressed(KEY_SPACE) && holding_wire) {
         wire.spawn_tool(lib::vect_t(pos.x, pos.y));
@@ -100,61 +100,87 @@ void player_t::update()
         (pos.y - camera_player.target.y) / cam_followspeed;
 }
 
-void player_t::collision_handler_static(cpArbiter *arb, cpSpace *space, cpDataPointer userData) {
+void player_t::collision_handler_static(lib::arbiter_t &arb,
+                                        lib::space_t &space,
+                                        cpDataPointer userData)
+{
     if (!IsKeyDown(KEY_SPACE))
         return;
 
-    // If colliding with a body whose ID is build_site and player presses a button and that build site is not attached to wire
-    physics::raw_poly_shape_t shape_a = physics::get_handle_from_polygon_shape(*((lib::poly_shape_t*)arb->a));
-    physics::raw_poly_shape_t shape_b = physics::get_handle_from_polygon_shape(*((lib::poly_shape_t*)arb->b));
+    // If colliding with a body whose ID is build_site and player presses a
+    // button and that build site is not attached to wire
+    auto shape_a_handleres = physics::get_handle_from_shape(arb.shape_a());
+    auto shape_b_handleres = physics::get_handle_from_shape(arb.shape_b());
+    if (!std::holds_alternative<physics::raw_poly_shape_t>(shape_a_handleres)) {
+        LN_WARN("Shape A (player) of player collision is not a polygon shape. "
+                "Aborting handler");
+        return;
+    }
+    if (!std::holds_alternative<physics::raw_segment_shape_t>(
+            shape_b_handleres)) {
+        LN_WARN("Shape B (non-player) of player collision is not a segement "
+                "shape. Aborting handler");
+        return;
+    }
+
+    auto shape_a = std::get<physics::raw_poly_shape_t>(shape_a_handleres);
+    auto shape_b = std::get<physics::raw_segment_shape_t>(shape_b_handleres);
     auto maybe_other_id_a = physics::get_id(shape_a);
     auto maybe_other_id_b = physics::get_id(shape_b);
 
-    LN_DEBUG_FMT("Shape b located at: {}", (void*)&shape_b);
-    LN_DEBUG_FMT("Shape a located at: {}", (void*)&shape_a);
     if (maybe_other_id_a.has_value() &&
-        maybe_other_id_a.value() == game_id_e::Build_Site && 
-        ((build_site_t*)(physics::get_user_data(shape_a).value()))->get_state() == 0
-    ) {
-         // If player is not holding wire 
-         if (!((player_t*)(userData))->holding_wire) {
+        maybe_other_id_a.value() == game_id_e::Build_Site &&
+        ((build_site_t *)(physics::get_user_data(shape_a).value()))
+                ->get_state() == 0) {
+        // If player is not holding wire
+        if (!((player_t *)(userData))->holding_wire) {
             // attach wire to that build site
             if (auto data = physics::get_user_data(shape_a)) {
-                ((player_t*)(userData))->wire.start_wire((*(build_site_t*)(data.value())));
-                ((player_t*)(userData))->holding_wire = true;
+                ((player_t *)(userData))
+                    ->wire.start_wire((*(build_site_t *)(data.value())));
+                ((player_t *)(userData))->holding_wire = true;
             }
-            // the player will now be holding their wire which is connected to the build site
-        } else if (((player_t*)(userData))->wire.check_wire_validity()) { // If player is holding wire and the wire is not tangled
+            // the player will now be holding their wire which is connected to
+            // the build site
+        } else if (((player_t *)(userData))
+                       ->wire
+                       .check_wire_validity()) { // If player is holding wire
+                                                 // and the wire is not tangled
             // both build sites the wire connects to shall be marked as complete
-            ((player_t*)(userData))->wire.end_wire((*(build_site_t*)(physics::get_user_data(shape_a).value())));
-            ((player_t*)(userData))->holding_wire = false;
-        } 
+            ((player_t *)(userData))
+                ->wire.end_wire((*(
+                    build_site_t *)(physics::get_user_data(shape_a).value())));
+            ((player_t *)(userData))->holding_wire = false;
+        }
     }
 
-
-
-
-
-    // the code is gonna be gross cuz either shapea or shapeb can be the player (these 2 sets of if statements can definitely be combined)
+    // the code is gonna be gross cuz either shapea or shapeb can be the player
+    // (these 2 sets of if statements can definitely be combined)
     if (maybe_other_id_b.has_value() &&
-        maybe_other_id_b.value() == game_id_e::Build_Site && 
-        ((build_site_t*)(physics::get_user_data(shape_b).value()))->get_state() == 0
-    ) {
-         // If player is not holding wire 
-         if (!((player_t*)(userData))->holding_wire) {
+        maybe_other_id_b.value() == game_id_e::Build_Site &&
+        ((build_site_t *)(physics::get_user_data(shape_b).value()))
+                ->get_state() == 0) {
+        // If player is not holding wire
+        if (!((player_t *)(userData))->holding_wire) {
             // attach wire to that build site
             if (auto data = physics::get_user_data(shape_b)) {
-                ((player_t*)(userData))->wire.start_wire((*(build_site_t*)(data.value())));
-                ((player_t*)(userData))->holding_wire = true;
+                ((player_t *)(userData))
+                    ->wire.start_wire((*(build_site_t *)(data.value())));
+                ((player_t *)(userData))->holding_wire = true;
             }
-            // the player will now be holding their wire which is connected to the build site
-        } else if (((player_t*)(userData))->wire.check_wire_validity()) { // If player is holding wire and the wire is not tangled
+            // the player will now be holding their wire which is connected to
+            // the build site
+        } else if (((player_t *)(userData))
+                       ->wire
+                       .check_wire_validity()) { // If player is holding wire
+                                                 // and the wire is not tangled
             // both build sites the wire connects to shall be marked as complete
-            ((player_t*)(userData))->wire.end_wire((*(build_site_t*)(physics::get_user_data(shape_b).value())));
-            ((player_t*)(userData))->holding_wire = false;
-        } 
+            ((player_t *)(userData))
+                ->wire.end_wire((*(
+                    build_site_t *)(physics::get_user_data(shape_b).value())));
+            ((player_t *)(userData))->holding_wire = false;
+        }
     }
 }
 
-
-}
+} // namespace cw

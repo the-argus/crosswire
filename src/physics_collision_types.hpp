@@ -3,7 +3,7 @@
 
 namespace cw::physics {
 
-enum class collision_type_e : cpCollisionType
+enum collision_type_e : cpCollisionType
 {
     Player = 1,
     Ditch,

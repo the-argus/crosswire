@@ -280,38 +280,32 @@ get_handle_from_polygon_shape(const lib::poly_shape_t &shape) noexcept
     return res.release();
 }
 
-void add_collision_handler(const cpCollisionHandler &handler) noexcept
+std::variant<raw_poly_shape_t, raw_segment_shape_t>
+get_handle_from_shape(const lib::shape_t &shape) noexcept
 {
-    cpCollisionHandler *new_handler = cpSpaceAddCollisionHandler(
-        &space.value(), handler.typeA, handler.typeB);
-    if (handler.postSolveFunc)
-        new_handler->postSolveFunc = handler.postSolveFunc;
-    if (handler.preSolveFunc)
-        new_handler->preSolveFunc = handler.preSolveFunc;
-    if (handler.userData)
-        new_handler->userData = handler.userData;
-    if (handler.beginFunc)
-        new_handler->beginFunc = handler.beginFunc;
-    if (handler.separateFunc)
-        new_handler->separateFunc = handler.separateFunc;
+    switch (shape.klass->type) {
+    case CP_CIRCLE_SHAPE:
+        LN_FATAL("Circle shapes not implemented but a handle was requested for "
+                 "one, unable to return anything.");
+        std::abort();
+        break;
+    case CP_POLY_SHAPE:
+        return get_handle_from_polygon_shape(
+            *reinterpret_cast<const lib::poly_shape_t *>(&shape));
+        break;
+    case CP_SEGMENT_SHAPE:
+        return get_handle_from_segment_shape(
+            *reinterpret_cast<const lib::segment_shape_t *>(&shape));
+        break;
+    default:
+        LN_FATAL("unknown or unimplemented shape type passed to "
+                 "get_handle_from_shape");
+        std::abort();
+        break;
+    }
 }
 
-void add_collision_handler_wildcard(
-    const collision_handler_wildcard_options_t &options) noexcept
-{
-    cpCollisionHandler *new_handler = cpSpaceAddWildcardHandler(
-        &space.value(), (cpCollisionType)options.typeA);
-    if (options.postSolveFunc)
-        new_handler->postSolveFunc = options.postSolveFunc;
-    if (options.preSolveFunc)
-        new_handler->preSolveFunc = options.preSolveFunc;
-    if (options.userData)
-        new_handler->userData = options.userData;
-    if (options.beginFunc)
-        new_handler->beginFunc = options.beginFunc;
-    if (options.separateFunc)
-        new_handler->separateFunc = options.separateFunc;
-}
+lib::space_t &get_space() noexcept { return space.value(); }
 
 /// Move all physics objects and potentially call collision handlers
 void update(float timestep) noexcept { space.value().step(timestep); }

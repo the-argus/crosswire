@@ -11,7 +11,7 @@ struct player_t {
     public:
         void draw();
         void update();
-        static void collision_handler_static(cpArbiter *arb, cpSpace *space, cpDataPointer userData);
+        static void collision_handler_static(lib::arbiter_t& arb, lib::space_t &space, cpDataPointer userData);
 
         player_t() noexcept;
         ~player_t();
