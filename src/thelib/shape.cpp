@@ -1,5 +1,5 @@
-#include "thelib/shape.hpp"
-#include "thelib/body.hpp"
+#include "shape.hpp"
+#include "body.hpp"
 #include <cassert>
 
 #ifdef THELIB_DEBUG

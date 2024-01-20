@@ -1,7 +1,7 @@
 #pragma once
 
+#include "result_errcode.hpp"
 #include "testing/abort.hpp"
-#include "thelib/result_errcode.hpp"
 #include <cstdint>
 #include <utility>
 #ifdef THELIB_RESULT_T_LOGGING

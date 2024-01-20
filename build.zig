@@ -64,6 +64,8 @@ const cpp_sources = &[_][]const u8{
     "src/thelib/shape.cpp",
     "src/thelib/space.cpp",
     "src/thelib/vect.cpp",
+    "src/thelib/contact.cpp",
+    "src/thelib/arbiter.cpp",
     "src/natural_log/natural_log.cpp",
     "src/allo/c_allocator.cpp",
     "src/allo/random_allocation_registry.cpp",

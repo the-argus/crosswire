@@ -12,6 +12,7 @@ constexpr size_t initial_reservation = 512;
 struct physics_user_data_t
 {
     cw::game_id_e id;
+    size_t typehash;
     void *user_data;
 };
 
@@ -81,7 +82,8 @@ void cleanup() noexcept
 }
 
 template <typename T>
-void generic_set_user_data_and_id(T &object, game_id_e id, void *data) noexcept
+void generic_set_user_data_and_id_raw(T &object, game_id_e id, void *data,
+                                      size_t typehash) noexcept
 {
     if (!user_data.has_value()) [[unlikely]] {
         LN_FATAL("attempt to set user data of physics body before physics "
@@ -91,6 +93,7 @@ void generic_set_user_data_and_id(T &object, game_id_e id, void *data) noexcept
 
     auto new_user_data = user_data.value().alloc_new(physics_user_data_t{
         .id = id,
+        .typehash = typehash,
         .user_data = data,
     });
 
@@ -109,30 +112,33 @@ void generic_set_user_data_and_id(T &object, game_id_e id, void *data) noexcept
     object.set_user_data(*reinterpret_cast<void **>(&unsafe_data));
 }
 
-void set_user_data_and_id(raw_body_t handle, game_id_e id, void *data) noexcept
+void set_user_data_and_id_raw(raw_body_t handle, game_id_e id, void *data,
+                              size_t typehash) noexcept
 {
-    generic_set_user_data_and_id(get_body(handle), id, data);
+    generic_set_user_data_and_id_raw(get_body(handle), id, data, typehash);
 }
 
-void set_user_data_and_id(raw_poly_shape_t handle, game_id_e id,
-                          void *data) noexcept
+void set_user_data_and_id_raw(raw_poly_shape_t handle, game_id_e id, void *data,
+                              size_t typehash) noexcept
 {
-    generic_set_user_data_and_id(*get_polygon_shape(handle).parent_cast(), id,
-                                 data);
+    generic_set_user_data_and_id_raw(*get_polygon_shape(handle).parent_cast(),
+                                     id, data, typehash);
 }
 
-void set_user_data_and_id(raw_segment_shape_t handle, game_id_e id,
-                          void *data) noexcept
+void set_user_data_and_id_raw(raw_segment_shape_t handle, game_id_e id,
+                              void *data, size_t typehash) noexcept
 {
-    generic_set_user_data_and_id(*get_segment_shape(handle).parent_cast(), id,
-                                 data);
+    generic_set_user_data_and_id_raw(*get_segment_shape(handle).parent_cast(),
+                                     id, data, typehash);
 }
 
 template <typename T>
 requires(
     std::is_same_v<T, lib::shape_t> ||
     std::is_same_v<
-        T, lib::body_t>) auto generic_get_user_data(const T &object) noexcept
+        T, lib::body_t>) auto generic_get_user_data_raw(const T &object,
+                                                        size_t
+                                                            typehash) noexcept
     -> lib::opt_t<void *>
 {
     {
@@ -147,10 +153,22 @@ requires(
             &object.userData);
     auto maybe_user_data = user_data.value().get(user_data_handle);
     if (maybe_user_data.okay()) {
-        return maybe_user_data.release().user_data;
+        auto data = maybe_user_data.release();
+        if (data.typehash != typehash) {
+            LN_FATAL_FMT(
+                "Attempt to get user data of a physics object but asked "
+                "for a different type than what was stored. Had {} but asked "
+                "for type with hash {}",
+                data.typehash, typehash);
+            std::abort();
+        }
+        return data.user_data;
     } else {
         LN_ERROR("Bad cast occurred in physics::get_user_data. Indicates "
                  "that the implementation of get_physics_id is unreliable.");
+#ifndef NDEBUG
+        std::abort();
+#endif
         return {};
     }
 }
@@ -160,28 +178,36 @@ lib::opt_t<game_id_e> get_id(raw_body_t handle) noexcept
     return get_id(get_body(handle));
 }
 
-lib::opt_t<void *> get_user_data(const raw_body_t handle) noexcept
+lib::opt_t<void *> get_user_data_raw(const raw_body_t handle,
+                                     size_t typehash) noexcept
 {
-    return generic_get_user_data(get_body(handle));
+    return generic_get_user_data_raw(get_body(handle), typehash);
 }
 
-lib::opt_t<void *> get_user_data(const lib::body_t &body) noexcept
+lib::opt_t<void *> get_user_data_raw(const lib::body_t &body,
+                                     size_t typehash) noexcept
 {
-    return generic_get_user_data(body);
+    return generic_get_user_data_raw(body, typehash);
 }
 
-lib::opt_t<void *> get_user_data(raw_poly_shape_t handle) noexcept
+lib::opt_t<void *> get_user_data_raw(raw_poly_shape_t handle,
+                                     size_t typehash) noexcept
 {
-    return generic_get_user_data(*get_polygon_shape(handle).parent_cast());
-}
-lib::opt_t<void *> get_user_data(raw_segment_shape_t handle) noexcept
-{
-    return generic_get_user_data(*get_segment_shape(handle).parent_cast());
+    return generic_get_user_data_raw(*get_polygon_shape(handle).parent_cast(),
+                                     typehash);
 }
 
-lib::opt_t<void *> get_user_data(const lib::shape_t &shape) noexcept
+lib::opt_t<void *> get_user_data_raw(raw_segment_shape_t handle,
+                                     size_t typehash) noexcept
 {
-    return generic_get_user_data(shape);
+    return generic_get_user_data_raw(*get_segment_shape(handle).parent_cast(),
+                                     typehash);
+}
+
+lib::opt_t<void *> get_user_data_raw(const lib::shape_t &shape,
+                                     size_t typehash) noexcept
+{
+    return generic_get_user_data_raw(shape, typehash);
 }
 
 auto generic_get_id = [](auto object) -> lib::opt_t<game_id_e> {
@@ -280,38 +306,32 @@ get_handle_from_polygon_shape(const lib::poly_shape_t &shape) noexcept
     return res.release();
 }
 
-void add_collision_handler(const cpCollisionHandler &handler) noexcept
+std::variant<raw_poly_shape_t, raw_segment_shape_t>
+get_handle_from_shape(const lib::shape_t &shape) noexcept
 {
-    cpCollisionHandler *new_handler = cpSpaceAddCollisionHandler(
-        &space.value(), handler.typeA, handler.typeB);
-    if (handler.postSolveFunc)
-        new_handler->postSolveFunc = handler.postSolveFunc;
-    if (handler.preSolveFunc)
-        new_handler->preSolveFunc = handler.preSolveFunc;
-    if (handler.userData)
-        new_handler->userData = handler.userData;
-    if (handler.beginFunc)
-        new_handler->beginFunc = handler.beginFunc;
-    if (handler.separateFunc)
-        new_handler->separateFunc = handler.separateFunc;
+    switch (shape.klass->type) {
+    case CP_CIRCLE_SHAPE:
+        LN_FATAL("Circle shapes not implemented but a handle was requested for "
+                 "one, unable to return anything.");
+        std::abort();
+        break;
+    case CP_POLY_SHAPE:
+        return get_handle_from_polygon_shape(
+            *reinterpret_cast<const lib::poly_shape_t *>(&shape));
+        break;
+    case CP_SEGMENT_SHAPE:
+        return get_handle_from_segment_shape(
+            *reinterpret_cast<const lib::segment_shape_t *>(&shape));
+        break;
+    default:
+        LN_FATAL("unknown or unimplemented shape type passed to "
+                 "get_handle_from_shape");
+        std::abort();
+        break;
+    }
 }
 
-void add_collision_handler_wildcard(
-    const collision_handler_wildcard_options_t &options) noexcept
-{
-    cpCollisionHandler *new_handler = cpSpaceAddWildcardHandler(
-        &space.value(), (cpCollisionType)options.typeA);
-    if (options.postSolveFunc)
-        new_handler->postSolveFunc = options.postSolveFunc;
-    if (options.preSolveFunc)
-        new_handler->preSolveFunc = options.preSolveFunc;
-    if (options.userData)
-        new_handler->userData = options.userData;
-    if (options.beginFunc)
-        new_handler->beginFunc = options.beginFunc;
-    if (options.separateFunc)
-        new_handler->separateFunc = options.separateFunc;
-}
+lib::space_t &get_space() noexcept { return space.value(); }
 
 /// Move all physics objects and potentially call collision handlers
 void update(float timestep) noexcept { space.value().step(timestep); }

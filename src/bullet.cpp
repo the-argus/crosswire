@@ -17,11 +17,6 @@ lib::vect_t bullet_t::position() const noexcept
     return physics::get_body(body).position();
 }
 
-lib::opt_t<void *> bullet_t::user_data() const noexcept
-{
-    return physics::get_user_data(body);
-}
-
 /// Do not use this constructor unless you know what you're doing
 bullet_t::bullet_t(const bullet_creation_options_t &options) noexcept
     : body(physics::create_body(game_id_e::Bullet,

@@ -1,8 +1,8 @@
 #pragma once
 #include "chipmunk/chipmunk.h"
-#include "thelib/rect.hpp"
-#include "thelib/slice.hpp"
-#include "thelib/vect.hpp"
+#include "rect.hpp"
+#include "slice.hpp"
+#include "vect.hpp"
 #include <chipmunk/chipmunk_structs.h>
 
 namespace lib {
@@ -19,6 +19,17 @@ class shape_t : public ::cpShape
     explicit inline constexpr shape_t(const cpShape &original) TESTING_NOEXCEPT
         : ::cpShape(original)
     {
+    }
+
+    static lib::shape_t *from_chipmunk(cpShape *body) TESTING_NOEXCEPT
+    {
+        return reinterpret_cast<lib::shape_t *>(body);
+    }
+
+    static const lib::shape_t *
+    from_chipmunk_const(const cpShape *body) TESTING_NOEXCEPT
+    {
+        return reinterpret_cast<const lib::shape_t *>(body);
     }
 
     [[nodiscard]] float friction() TESTING_NOEXCEPT;
