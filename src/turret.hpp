@@ -12,6 +12,8 @@ void cleanup() noexcept;
 void clear_level() noexcept;
 /// Update turrets. should be called every frame
 void update(float dt) noexcept;
+/// Draw all turrets
+void draw() noexcept;
 
 enum class turret_pattern_e : uint8_t
 {
@@ -26,6 +28,7 @@ enum class turret_pattern_e : uint8_t
 struct turret_creation_options_t
 {
     lib::vect_t position;
+    float initial_direction_radians;
     float fire_rate;
     turret_pattern_e pattern;
 };

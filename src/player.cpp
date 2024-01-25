@@ -10,6 +10,12 @@
 #include <raylib.h>
 
 namespace cw {
+static lib::opt_t<player_t> my_player;
+
+void player_t::init() noexcept { my_player.emplace(); }
+const player_t &player_t::get_const() noexcept { return my_player.value(); }
+player_t &player_t::get() noexcept { return my_player.value(); }
+
 player_t::player_t() noexcept
     : body(physics::create_body(game_id_e::Player,
                                 {
@@ -43,7 +49,7 @@ player_t::~player_t()
     physics::delete_polygon_shape(shape);
 }
 
-void player_t::draw()
+void player_t::draw() const noexcept
 {
     wire.draw();
     for (wire_t completed_wire : completed_wires) {
@@ -55,7 +61,12 @@ void player_t::draw()
     // DrawRectangle(pos.x, pos.y, bounding_box_size, bounding_box_size, RED);
 }
 
-void player_t::update()
+[[nodiscard]] lib::vect_t player_t::position() const noexcept
+{
+    return physics::get_body(body).position();
+}
+
+void player_t::update() noexcept
 {
     lib::vect_t velocity(0);
 
@@ -127,27 +138,29 @@ void player_t::collision_handler_static(lib::arbiter_t &arb,
         // it
         build_site_t *site = maybe_site.value();
         if (site->get_state() != 0) {
-			LN_DEBUG_FMT("attempt to press space on wire with state {}", site->get_state());
+            LN_DEBUG_FMT("attempt to press space on wire with state {}",
+                         site->get_state());
             return;
-		}
+        }
 
         if (!player->holding_wire) {
-			LN_DEBUG("player not holding wire but it pressed space on a build site");
+            LN_DEBUG(
+                "player not holding wire but it pressed space on a build site");
             // attach wire to that build site
             player->wire.start_wire(*site);
             player->holding_wire = true;
             // the player will now be holding their wire which is
             // connected to the build site
         } else if (player->wire.check_wire_validity()) {
-			LN_DEBUG("player holding wire and it is valid");
+            LN_DEBUG("player holding wire and it is valid");
             // If player is holding wire and the wire is not tangled
             // both build sites the wire connects to shall be marked
             // as complete
             player->wire.end_wire(*site);
             player->holding_wire = false;
         } else {
-			LN_DEBUG("player holding wire and it is NOT valid");
-		}
+            LN_DEBUG("player holding wire and it is NOT valid");
+        }
     };
 
     checkshape(arb.shape_a());

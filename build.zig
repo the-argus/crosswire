@@ -82,6 +82,7 @@ const cpp_sources = &[_][]const u8{
     "src/build_site.cpp",
     "src/wire.cpp",
     "src/level_loader.cpp",
+    "src/turret.cpp",
 };
 
 const include_dirs = &[_][]const u8{

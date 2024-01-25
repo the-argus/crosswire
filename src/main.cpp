@@ -1,3 +1,4 @@
+#include "turret.hpp"
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #endif
@@ -6,13 +7,13 @@
 #include "constants/screen.hpp"
 #include "globals.hpp"
 #include "input.hpp"
+#include "level_loader.hpp"
 #include "natural_log/natural_log.hpp"
 #include "physics.hpp"
 #include "player.hpp"
 #include "render_pipeline.hpp"
 #include "resources.hpp"
 #include "terrain.hpp"
-#include "level_loader.hpp"
 #include "thelib/opt.hpp"
 #include <raylib.h>
 
@@ -23,7 +24,6 @@ static void update();
 static void draw();
 static void draw_hud();
 
-static lib::opt_t<player_t> my_player;
 static lib::opt_t<build_site_t> build_site_1;
 static lib::opt_t<build_site_t> build_site_2;
 static lib::opt_t<build_site_t> build_site_3;
@@ -43,11 +43,12 @@ int main()
     terrain::init();
     resources::load();
     bullet::init();
+    turret::init();
 
     loader::load_level("test");
 
     // wait to initialize player until after physics
-    my_player.emplace();
+    player_t::init();
     // build_site_1.emplace(lib::vect_t(100,300));
     // build_site_2.emplace(lib::vect_t(300,150));
     // build_site_3.emplace(lib::vect_t(400,100));
@@ -74,7 +75,7 @@ int main()
     }
 
     // destroy player before cleaning up physics. not necessary but cool!!!!!
-    my_player.reset();
+    turret::cleanup();
     terrain::cleanup();
     physics::cleanup();
     bullet::cleanup();
@@ -87,7 +88,8 @@ static void update()
     update_screen_scale();
 
     update_virtual_cursor_position(get_screen_scale());
-    my_player.value().update();
+    player_t::get().update();
+    turret::update(GetFrameTime());
 
     physics::update(1.0f / 60.0f);
 
@@ -96,8 +98,9 @@ static void update()
 
 static void draw()
 {
-    my_player.value().draw();
+    player_t::get_const().draw();
     physics::debug_draw_all_shapes();
+    turret::draw();
 }
 static void draw_hud() { DrawFPS(30, 10); }
 

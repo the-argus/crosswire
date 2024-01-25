@@ -8,7 +8,7 @@ namespace cw {
 wire_t::wire_t(player_t* player) {
     playerRef = player;
 }
-void wire_t::draw() {
+void wire_t::draw() const {
     if (joints.empty())
         return;
 
@@ -60,7 +60,7 @@ void wire_t::spawn_tool(lib::vect_t position) {
         joints.push_back(position);
     }
 }
-bool wire_t::check_wire_validity() {
+bool wire_t::check_wire_validity() const {
     // test for collision between wire and the global static body
     return true;
 }

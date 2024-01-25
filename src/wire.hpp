@@ -9,12 +9,12 @@ namespace cw {
 
     struct wire_t {
         public:
-            void draw();
+            void draw() const;
             void update();
             void start_wire(build_site_t&);
             void end_wire(build_site_t&);
             void spawn_tool(lib::vect_t position);
-            bool check_wire_validity();
+            [[nodiscard]] bool check_wire_validity() const;
 
             wire_t(player_t* player);
 
