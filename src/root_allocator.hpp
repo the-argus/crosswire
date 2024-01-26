@@ -1,5 +1,5 @@
 #pragma once
-#include "allo/c_allocator.hpp"
+#include <platform/allocators/c_allocator.hpp>
 
 namespace cw {
 /// The primary random allocator used for getting memory to every other

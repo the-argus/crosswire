@@ -1,7 +1,8 @@
 #pragma once
 
-#include "constants/screen.hpp"
-#include "terrain.hpp"
+#include <config/screen.hpp>
+#include <gameplay/terrain.hpp>
+
 #include <array>
 
 inline void load_debug_level()

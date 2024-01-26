@@ -6,7 +6,7 @@
 #include "constants/screen.hpp"
 #include "globals.hpp"
 #include "input.hpp"
-#include "natural_log/natural_log.hpp"
+#include "platform/natural_log/natural_log.hpp"
 #include "physics.hpp"
 #include "player.hpp"
 #include "render_pipeline.hpp"

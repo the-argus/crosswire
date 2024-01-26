@@ -60,26 +60,32 @@ const zcc = @import("compile_commands");
 const build_emscripten = @import("build_emscripten.zig");
 
 const cpp_sources = &[_][]const u8{
+    "src/main.cpp",
+    "src/resources.cpp",
+
     "src/thelib/body.cpp",
     "src/thelib/shape.cpp",
     "src/thelib/space.cpp",
     "src/thelib/vect.cpp",
-    "src/natural_log/natural_log.cpp",
-    "src/allo/c_allocator.cpp",
-    "src/allo/random_allocation_registry.cpp",
-    "src/allo/stack_allocator.cpp",
+
+    "src/platform/natural_log/natural_log.cpp",
+    "src/platform/allocators/c_allocator.cpp",
+    "src/platform/allocators/random_allocation_registry.cpp",
+    "src/platform/allocators/stack_allocator.cpp",
+
     "src/render_pipeline.cpp",
-    "src/bullet.cpp",
-    "src/main.cpp",
     "src/globals.cpp",
-    "src/input.cpp",
-    "src/physics.cpp",
-    "src/player.cpp",
-    "src/terrain.cpp",
-    "src/resources.cpp",
-    "src/build_site.cpp",
-    "src/wire.cpp",
-    "src/level_loader.cpp",
+
+    "src/systems/input.cpp",
+    "src/systems/physics.cpp",
+
+    "src/gameplay/player.cpp",
+    "src/gameplay/terrain.cpp",
+    "src/gameplay/bullet.cpp",
+    "src/gameplay/build_site.cpp",
+    "src/gameplay/wire.cpp",
+
+    "src/gameplay/level_loader.cpp",
 };
 
 const include_dirs = &[_][]const u8{

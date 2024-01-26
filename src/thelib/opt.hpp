@@ -5,7 +5,7 @@
 #include <fmt/core.h>
 #include <utility>
 #ifdef THELIB_OPT_T_LOGGING
-#include "natural_log/natural_log.hpp"
+#include "platform/natural_log/natural_log.hpp"
 #endif
 
 namespace lib {

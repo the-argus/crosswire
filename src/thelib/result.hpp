@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <utility>
 #ifdef THELIB_RESULT_T_LOGGING
-#include "natural_log/natural_log.hpp"
+#include "platform/natural_log/natural_log.hpp"
 #endif
 
 namespace lib {

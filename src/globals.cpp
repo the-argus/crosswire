@@ -1,7 +1,9 @@
-#include "globals.hpp"
-#include "constants/screen.hpp"
-#include "natural_log/natural_log.hpp"
-#include "thelib/opt.hpp"
+#include <globals.hpp>
+
+#include <config/screen.hpp>
+#include <platform/natural_log/natural_log.hpp>
+#include <thelib/opt.hpp>
+
 #include <cassert>
 
 /// Global variables

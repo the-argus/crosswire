@@ -1,6 +1,6 @@
 #pragma once
 #ifdef THELIB_SLICE_T_LOGGING
-#include "natural_log/natural_log.hpp"
+#include <platform//natural_log/natural_log.hpp>
 #endif
 #include "testing/abort.hpp"
 #include <cassert>
